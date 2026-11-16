@@ -24,7 +24,7 @@
   const num = (v) => { let s = String(v ?? '').trim(); if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.'); const x = parseFloat(s); return isFinite(x) ? x : NaN; };
   const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const PAL = ['#4f6bd8', '#e0a54a', '#2e9e6b', '#c2410c', '#7c3aed', '#0e7490', '#be185d', '#65a30d', '#64748b', '#a16207', '#0f766e', '#9333ea'];
+  const PAL = ['#2e9e6b', '#e0a54a', '#4f6bd8', '#c2410c', '#7c3aed', '#0e7490', '#be185d', '#65a30d', '#64748b', '#a16207', '#0f766e', '#9333ea'];
 
   function toast(msg, err) { const t = $('toast'); t.textContent = msg; t.className = 'on' + (err ? ' err' : ''); clearTimeout(toast._t); toast._t = setTimeout(() => (t.className = ''), 2600); }
 
@@ -98,7 +98,7 @@
   function nav() {
     $('nav').innerHTML = '<div class="brand">Finanzas<small>Ingresos, gastos y ahorro</small></div>' +
       NAV.map((g) => '<div class="grp">' + g[0] + '</div>' + g[1].map((x) => '<button' + (x[0] === vista ? ' class="on"' : '') + ' onclick="location.hash=\'' + x[0] + '\'">' + x[1] + '</button>').join('')).join('') +
-      '<div class="tasa">Tasa para convertir<b>' + bs(S.tasa) + ' por $</b><button class="lnk" style="color:#d6defa;margin-top:4px" onclick="F.tasa()">Cambiar tasa</button></div>';
+      '<div class="tasa">Tasa para convertir<b>' + bs(S.tasa) + ' por $</b><button class="lnk" style="color:#cfe8da;margin-top:4px" onclick="F.tasa()">Cambiar tasa</button></div>';
   }
   function go() {
     const k = location.hash.slice(1); vista = V[k] ? k : 'resumen'; nav();
