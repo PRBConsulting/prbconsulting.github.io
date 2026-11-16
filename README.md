@@ -5,7 +5,7 @@ Apps web simples para negocios pequeños, publicadas en GitHub Pages: https://pr
 | App | Ruta | Estado |
 | --- | --- | --- |
 | X3 DATA Lite: compras, ventas, inventario y cierre de caja | `/x3-lite/` | Disponible |
-| Finanzas personales | `/finanzas/` | Próximamente |
+| Finanzas personales: cuentas en $ y Bs, presupuesto y metas | `/finanzas/` | Disponible |
 | X3 DATA | `/x3/` | Próximamente |
 
 ## Cómo funcionan
