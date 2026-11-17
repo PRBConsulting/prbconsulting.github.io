@@ -1,11 +1,11 @@
 /* X3 DATA Lite · PRB Consulting
    Compras, ventas, inventario y cierre de caja para negocios pequeños.
-   Todo se guarda en el navegador del visitante (localStorage). Datos de prueba inventados. */
+   Todo se guarda en el navegador del visitante (localStorage). Datos ficticios. */
 (function () {
   'use strict';
-  const KEY = 'prb-x3lite-v1';
-  const PAGOS = ['Efectivo $', 'Efectivo Bs', 'Pago móvil', 'Punto de venta', 'Transferencia', 'Zelle'];
-  const EFECTIVO = ['Efectivo $', 'Efectivo Bs'];
+  const KEY = 'prb-x3lite-v1' + PRB.sfx; const EN = PRB.en;
+  const PAGOS = PRB.pagos || ['Efectivo $', 'Efectivo Bs', 'Pago móvil', 'Punto de venta', 'Transferencia', 'Zelle'];
+  const EFECTIVO = EN ? ['Cash'] : ['Efectivo $', 'Efectivo Bs'];
   const MOTIVOS = ['Merma o daño', 'Vencido', 'Conteo físico', 'Consumo interno', 'Corrección'];
 
   /* ---------- utilidades ---------- */
@@ -15,15 +15,15 @@
   const isoTime = (d) => isoDay(d) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
   const hoy = () => isoDay(new Date());
   const addDays = (iso, k) => { const d = new Date(iso + 'T12:00'); d.setDate(d.getDate() + k); return isoDay(d); };
-  const fdia = (iso) => iso ? iso.slice(8, 10) + '/' + iso.slice(5, 7) + '/' + iso.slice(0, 4) : '';
+  const fdia = PRB.fecha;
   const fhora = (iso) => iso && iso.length > 10 ? iso.slice(11, 16) : '';
-  const nf2 = new Intl.NumberFormat('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const nf0 = new Intl.NumberFormat('es-VE', { maximumFractionDigits: 2 });
+  const nf2 = new Intl.NumberFormat(PRB.loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const nf0 = new Intl.NumberFormat(PRB.loc, { maximumFractionDigits: 2 });
   const usd = (v) => '$' + nf2.format(r2(v));
-  const bs = (v) => 'Bs ' + nf2.format(r2(v));
+  const bs = (v) => (EN ? '' : 'Bs ' + nf2.format(r2(v)));
   const qty = (v) => nf0.format(v);
   const r2 = (v) => Math.round((+v + Number.EPSILON) * 100) / 100;
-  const num = (v) => { const x = parseFloat(String(v ?? '').trim().replace(/\./g, (m, i, s) => (s.indexOf(',') > -1 ? '' : m)).replace(',', '.')); return isFinite(x) ? x : NaN; };
+  const num = PRB.num;
   const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -44,7 +44,7 @@
   }
   function seed() {
     const st = blank();
-    st.negocio = 'Bodega La Esquina (demo)';
+    st.negocio = EN ? 'Corner Market (demo)' : 'Bodega La Esquina (demo)';
     let s = 17; const rnd = () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
     const P = [
       ['ALI-01', 'Harina de maíz 1 kg', 'Alimentos', 'Paquete', 0.82, 1.15, 20],
@@ -67,11 +67,22 @@
       ['LIM-04', 'Papel higiénico x4', 'Limpieza', 'Paquete', 1.60, 2.30, 8],
       ['CON-01', 'Tequeños congelados x12', 'Congelados', 'Bandeja', 4.30, 6.50, 4]
     ];
+    if (EN) P.splice(0, P.length,
+      ['GRO-01', 'White bread loaf', 'Grocery', 'Loaf', 1.9, 3.29, 15], ['GRO-02', 'Long grain rice 2 kg', 'Grocery', 'Bag', 3.1, 4.99, 10],
+      ['GRO-03', 'Spaghetti 900 g', 'Grocery', 'Box', 1.2, 2.29, 12], ['GRO-04', 'Sugar 2 kg', 'Grocery', 'Bag', 1.9, 3.19, 10],
+      ['GRO-05', 'Ground coffee 340 g', 'Grocery', 'Can', 5.4, 8.99, 8], ['GRO-06', 'Canola oil 1 L', 'Grocery', 'Bottle', 3.3, 5.49, 8],
+      ['GRO-07', 'Black beans 540 ml', 'Grocery', 'Can', 0.8, 1.49, 10], ['GRO-08', 'Tuna 170 g', 'Grocery', 'Can', 1.1, 1.99, 12],
+      ['DAI-01', 'Milk 2% 2 L', 'Dairy', 'Carton', 3.2, 4.89, 8], ['DAI-02', 'Cheddar cheese 400 g', 'Dairy', 'Pack', 4.6, 7.49, 5],
+      ['DAI-03', 'Large eggs dozen', 'Dairy', 'Dozen', 3.1, 4.79, 6], ['BEV-01', 'Cola 2 L', 'Drinks', 'Bottle', 1.4, 2.79, 12],
+      ['BEV-02', 'Spring water 24 pack', 'Drinks', 'Case', 3.2, 5.99, 8], ['BEV-03', 'Orange juice 1.75 L', 'Drinks', 'Carton', 2.6, 4.29, 8],
+      ['HOM-01', 'Bar soap 2 pack', 'Household', 'Pack', 1.1, 2.19, 12], ['HOM-02', 'Laundry detergent 1.5 L', 'Household', 'Bottle', 5.2, 8.49, 6],
+      ['HOM-03', 'Bleach 1.8 L', 'Household', 'Bottle', 1.8, 3.29, 8], ['HOM-04', 'Toilet paper 6 rolls', 'Household', 'Pack', 3.4, 5.99, 8],
+      ['FRZ-01', 'Frozen cheese sticks 12', 'Frozen', 'Box', 5.5, 8.99, 4]);
     const ini = [40, 30, 25, 25, 14, 14, 20, 30, 10, 8, 6, 24, 30, 12, 30, 10, 14, 16, 6];
     st.productos = P.map((p, i) => ({ id: 'p' + (i + 1), cod: p[0], nombre: p[1], cat: p[2], unidad: p[3], costo: p[4], precio: p[5], min: p[6], inicial: ini[i], activo: true }));
     const stock = {}; st.productos.forEach((p) => (stock[p.id] = p.inicial));
-    const PROV = { 'Alimentos': 'Distribuidora Andina', 'Lácteos': 'Lácteos del Valle', 'Bebidas': 'Bebidas del Centro', 'Limpieza': 'Químicos Unidos', 'Congelados': 'Alimentos Prisma' };
-    const CLI = ['', '', '', '', 'Sra. Carmen', 'Sr. Luis', 'Panadería vecina', 'Sr. José', 'Sra. Ana'];
+    const PROV = EN ? { 'Grocery': 'Northern Foods Wholesale', 'Dairy': 'Valley Dairy Co.', 'Drinks': 'Metro Beverages', 'Household': 'CleanCo Supply', 'Frozen': 'Prisma Foods' } : { 'Alimentos': 'Distribuidora Andina', 'Lácteos': 'Lácteos del Valle', 'Bebidas': 'Bebidas del Centro', 'Limpieza': 'Químicos Unidos', 'Congelados': 'Alimentos Prisma' };
+    const CLI = EN ? ['', '', '', '', 'Mrs. Carter', 'Mr. Lee', 'Bakery next door', 'Mr. Patel', 'Ms. Nguyen'] : ['', '', '', '', 'Sra. Carmen', 'Sr. Luis', 'Panadería vecina', 'Sr. José', 'Sra. Ana'];
     const DIAS = 45; const t0 = hoy();
     let tasa = 52.4 - DIAS * 0.06;
     for (let k = DIAS; k >= 0; k--) {
@@ -100,12 +111,13 @@
         }
         if (!items.length) continue;
         const h = 7 + Math.floor((v / nv) * 12); const min = Math.floor(rnd() * 60);
-        const pr = rnd(); const pago = pr < 0.28 ? 'Pago móvil' : pr < 0.5 ? 'Efectivo $' : pr < 0.66 ? 'Punto de venta' : pr < 0.8 ? 'Efectivo Bs' : pr < 0.92 ? 'Transferencia' : 'Zelle';
+        const pr = rnd(); let pago = pr < 0.28 ? 'Pago móvil' : pr < 0.5 ? 'Efectivo $' : pr < 0.66 ? 'Punto de venta' : pr < 0.8 ? 'Efectivo Bs' : pr < 0.92 ? 'Transferencia' : 'Zelle';
+        if (EN) pago = PAGOS[pr < 0.3 ? 0 : pr < 0.6 ? 1 : pr < 0.88 ? 2 : 3];
         const total = r2(items.reduce((a, x) => a + x.cant * x.precio, 0));
         st.ventas.push({ id: uid(), num: st.seq.venta++, fecha: dia + 'T' + pad(h) + ':' + pad(min), cliente: CLI[Math.floor(rnd() * CLI.length)], pago, tasa, items, total, anulada: false });
       }
       // un ajuste de vez en cuando
-      if (k % 11 === 3) { const p = st.productos[Math.floor(rnd() * st.productos.length)]; if (stock[p.id] > 0) { stock[p.id] -= 1; st.ajustes.push({ id: uid(), fecha: dia + 'T20:00', pid: p.id, cant: -1, motivo: 'Merma o daño', nota: 'Empaque roto' }); } }
+      if (k % 11 === 3) { const p = st.productos[Math.floor(rnd() * st.productos.length)]; if (stock[p.id] > 0) { stock[p.id] -= 1; st.ajustes.push({ id: uid(), fecha: dia + 'T20:00', pid: p.id, cant: -1, motivo: 'Merma o daño', nota: EN ? 'Broken package' : 'Empaque roto' }); } }
     }
     // dejar la venta de hoy incompleta: quitar ventas de hoy después de la hora actual
     const ahora = isoTime(new Date());
@@ -116,7 +128,7 @@
       const dia = addDays(t0, -k); const c = cajaDia(st, dia);
       if (!c.n) continue;
       const contado = {}; EFECTIVO.forEach((p) => (contado[p] = r2(c.por[p].usd + (k === 3 && p === 'Efectivo $' ? -2 : 0))));
-      st.cierres.push({ id: uid(), dia, hecho: dia + 'T19:30', total: c.total, por: c.por, contado, nota: k === 3 ? 'Faltaron $2, se revisó el vuelto' : '' });
+      st.cierres.push({ id: uid(), dia, hecho: dia + 'T19:30', total: c.total, por: c.por, contado, nota: k === 3 ? (EN ? '$2 short, checked the change' : 'Faltaron $2, se revisó el vuelto') : '' });
     }
     return st;
   }
@@ -156,13 +168,13 @@
   function nav() {
     $('nav').innerHTML = '<div class="brand">X3 DATA Lite<small>Compras, ventas e inventario</small></div>' +
       NAV.map((g) => '<div class="grp">' + g[0] + '</div>' + g[1].map((x) => '<button data-k="' + x[0] + '"' + (x[0] === vista ? ' class="on"' : '') + ' onclick="location.hash=\'' + x[0] + '\'">' + x[1] + '</button>').join('')).join('') +
-      '<div class="tasa">Tasa del día<b>' + bs(S.tasa) + ' por $</b><button class="lnk" style="color:#cfe8da;margin-top:4px" onclick="X.tasa()">Cambiar tasa</button></div>';
+      (EN ? '' : '<div class="tasa">Tasa del día<b>' + bs(S.tasa) + ' por $</b><button class="lnk" style="color:#cfe8da;margin-top:4px" onclick="X.tasa()">Cambiar tasa</button></div>');
   }
   function go() {
     const k = location.hash.slice(1);
     vista = V[k] ? k : 'panel';
     nav();
-    $('m').innerHTML = V[vista]() + '<div class="foot">X3 DATA Lite · hecho por <a href="../">PRB Consulting</a>. Demo con datos inventados: lo que registres se guarda solo en este navegador. Puedes volver a los datos de ejemplo en Configuración.</div>';
+    $('m').innerHTML = V[vista]() + '<div class="foot">X3 DATA Lite · hecho por <a href="../">PRB Consulting</a>. Demo con datos ficticios: lo que registres se guarda solo en este navegador. Puedes volver a los datos ficticios en Configuración.</div>';
     if (A[vista]) A[vista]();
     window.scrollTo(0, 0);
   }
@@ -193,27 +205,27 @@
     const top = {}; dMes.forEach((v) => v.items.forEach((x) => (top[x.pid] = (top[x.pid] || 0) + x.cant * x.precio)));
     const tops = Object.entries(top).sort((a, b) => b[1] - a[1]).slice(0, 6);
     const W = 560, bw = W / 14;
-    return '<h1>' + esc(S.negocio) + '</h1><p class="sub">Hoy ' + fdia(h) + ' · tasa ' + bs(S.tasa) + ' por $</p>' +
-      '<div class="kpis"><div class="card kpi"><div class="n">' + usd(vHoy) + '</div><div class="t">Ventas de hoy · ' + dHoy.length + ' ventas · ' + bs(vHoy * S.tasa) + '</div></div>' +
+    return '<h1>' + esc(S.negocio) + '</h1><p class="sub">Hoy ' + fdia(h) + (EN ? '' : ' · tasa ' + bs(S.tasa) + ' por $') + '</p>' +
+      '<div class="kpis"><div class="card kpi"><div class="n">' + usd(vHoy) + '</div><div class="t">Ventas de hoy · ' + dHoy.length + ' ventas' + (EN ? '' : ' · ' + bs(vHoy * S.tasa)) + '</div></div>' +
       '<div class="card kpi" style="--c:var(--ok)"><div class="n">' + usd(uHoy) + '</div><div class="t">Ganancia de hoy</div></div>' +
       '<div class="card kpi" style="--c:var(--brand2)"><div class="n">' + usd(vMes) + '</div><div class="t">Ventas del mes · ganancia ' + usd(uMes) + (vMes ? ' (' + Math.round(uMes / vMes * 100) + '%)' : '') + '</div></div>' +
       '<div class="card kpi" style="--c:var(--warn)"><div class="n">' + usd(valInv) + '</div><div class="t">Inventario a costo · ' + bajos.length + ' por reponer</div></div></div>' +
       '<div class="g2"><div class="card"><h3>Ventas de los últimos 14 días ($)</h3><svg viewBox="0 0 ' + W + ' 190" width="100%" role="img" aria-label="Ventas por día">' +
       dias.map((d, i) => { const hh = d[1] / mx * 140; const x = i * bw + 4; return '<rect x="' + x + '" y="' + (160 - hh) + '" width="' + (bw - 8) + '" height="' + hh + '" rx="3" fill="' + (i === 13 ? 'var(--acc)' : '#9fb3a9') + '"><title>' + fdia(d[0]) + ': ' + usd(d[1]) + '</title></rect><text x="' + (x + (bw - 8) / 2) + '" y="178" font-size="10" text-anchor="middle" fill="#667085">' + d[0].slice(8) + '</text>' + (d[1] ? '<text x="' + (x + (bw - 8) / 2) + '" y="' + (154 - hh) + '" font-size="9.5" text-anchor="middle" fill="#1b2430">' + Math.round(d[1]) + '</text>' : ''); }).join('') +
       '</svg></div><div class="card"><h3>Lo más vendido este mes</h3>' + (tops.length ? tops.map((t) => '<div class="hb"><span class="l">' + esc(prod(t[0])?.nombre) + '</span><span class="b"><i style="width:' + (t[1] / tops[0][1] * 100) + '%"></i></span><span class="v">' + usd(t[1]) + '</span></div>').join('') : '<div class="empty">Sin ventas este mes</div>') + '</div></div>' +
-      '<div class="g2e"><div class="card scroll"><h3>Por reponer</h3>' + (bajos.length ? '<table><thead><tr><th>Producto</th><th class="r">Existencia</th><th class="r">Mínimo</th><th></th></tr></thead><tbody>' + bajos.map((p) => '<tr><td>' + esc(p.nombre) + '</td><td class="r">' + qty(sm[p.id]) + '</td><td class="r">' + qty(p.min) + '</td><td>' + estado(p, sm[p.id]) + '</td></tr>').join('') + '</tbody></table><div class="row" style="margin:10px 0 0"><button class="btn sm" onclick="X.compraDesdeBajos()">Armar compra con estos productos</button></div>' : '<div class="empty">Todo el inventario está sobre el mínimo</div>') + '</div>' +
+      '<div class="g2e"><div class="card scroll"><h3>Por reponer</h3>' + (bajos.length ? '<table><thead><tr><th>Producto</th><th class="r">Exist.</th><th class="r">Mín.</th><th class="hm"></th></tr></thead><tbody>' + bajos.map((p) => '<tr><td class="wrap">' + esc(p.nombre) + '</td><td class="r">' + qty(sm[p.id]) + '</td><td class="r">' + qty(p.min) + '</td><td class="hm">' + estado(p, sm[p.id]) + '</td></tr>').join('') + '</tbody></table><div class="row" style="margin:10px 0 0"><button class="btn sm" onclick="X.compraDesdeBajos()">Armar compra con estos productos</button></div>' : '<div class="empty">Todo el inventario está sobre el mínimo</div>') + '</div>' +
       '<div class="card scroll"><h3>Últimas ventas</h3>' + tablaVentas(vs.slice(-6).reverse(), true) + '</div></div>';
   };
 
   function tablaVentas(L, corta) {
     if (!L.length) return '<div class="empty">No hay ventas</div>';
-    return '<table><thead><tr><th>N°</th><th>' + (corta ? 'Hora' : 'Fecha') + '</th>' + (corta ? '' : '<th>Cliente</th>') + '<th>Pago</th><th class="r">Total $</th>' + (corta ? '' : '<th class="r">Total Bs</th><th class="r">Ganancia</th><th></th>') + '</tr></thead><tbody>' +
+    return '<table><thead><tr><th>N°</th><th>' + (corta ? 'Hora' : 'Fecha') + '</th>' + (corta ? '' : '<th>Cliente</th>') + '<th>Pago</th><th class="r">Total $</th>' + (corta ? '' : '<th class="r bs">Total Bs</th><th class="r">Ganancia</th><th></th>') + '</tr></thead><tbody>' +
       L.map((v) => '<tr' + (v.anulada ? ' class="off"' : '') + '><td><button class="lnk" onclick="X.recibo(\'' + v.id + '\')">' + String(v.num).padStart(5, '0') + '</button></td><td>' + (corta ? fhora(v.fecha) : fdia(v.fecha) + ' ' + fhora(v.fecha)) + '</td>' + (corta ? '' : '<td>' + esc(v.cliente || '—') + '</td>') + '<td>' + esc(v.pago) + '</td><td class="r">' + usd(v.total) + '</td>' +
-        (corta ? '' : '<td class="r">' + bs(v.total * v.tasa) + '</td><td class="r">' + usd(v.total - ventaCosto(v)) + '</td><td>' + (v.anulada ? '<span class="tag mut">Anulada</span>' : '<button class="lnk bad" onclick="X.anularVenta(\'' + v.id + '\')">Anular</button>') + '</td>') + '</tr>').join('') + '</tbody></table>';
+        (corta ? '' : '<td class="r bs">' + bs(v.total * v.tasa) + '</td><td class="r">' + usd(v.total - ventaCosto(v)) + '</td><td>' + (v.anulada ? '<span class="tag mut">Anulada</span>' : '<button class="lnk bad" onclick="X.anularVenta(\'' + v.id + '\')">Anular</button>') + '</td>') + '</tr>').join('') + '</tbody></table>';
   }
 
   /* --- Vender (punto de venta) --- */
-  let carrito = []; let cliente = ''; let pago = 'Pago móvil'; let filtro = '';
+  let carrito = []; let cliente = ''; let pago = PAGOS[EN ? 1 : 2]; let filtro = '';
   V.vender = () => '<h1>Vender</h1><p class="sub">Busca o toca un producto para agregarlo. El sistema revisa la existencia y calcula el total en $ y en bolívares con la tasa del día.</p>' +
     '<div class="g2"><div class="card"><div class="row"><input id="q" class="inp" placeholder="Buscar por nombre o código…" value="' + esc(filtro) + '" autocomplete="off"></div><div id="cat" class="scroll"></div></div>' +
     '<div class="card" id="cart"></div></div><button class="fab" id="fab" hidden onclick="document.getElementById(\'cart\').scrollIntoView({behavior:\'smooth\'})"></button>';
@@ -237,8 +249,8 @@
       : '<div class="empty">Agrega productos desde la lista</div>') +
       '<div class="form" style="margin-top:12px"><label class="f">Cliente (opcional)<input class="inp" id="cli" value="' + esc(cliente) + '" oninput="X.setCli(this.value)"></label>' +
       '<label class="f">Forma de pago<select class="inp" onchange="X.setPago(this.value)">' + PAGOS.map((p) => '<option' + (p === pago ? ' selected' : '') + '>' + p + '</option>').join('') + '</select></label></div>' +
-      '<table style="margin-top:12px"><tr class="tot"><td>Total $</td><td class="r">' + usd(tot) + '</td></tr><tr class="tot"><td>Total Bs</td><td class="r">' + bs(tot * S.tasa) + '</td></tr></table>' +
-      '<div class="row" style="justify-content:flex-end;margin:12px 0 0"><button class="btn sec" onclick="X.vaciar()" ' + (carrito.length ? '' : 'disabled') + '>Vaciar</button><button class="btn" onclick="X.cobrar()" ' + (carrito.length ? '' : 'disabled') + '>Cobrar ' + usd(tot) + '</button></div>';
+      '<table style="margin-top:12px"><tr class="tot"><td>Total $</td><td class="r">' + usd(tot) + '</td></tr><tr class="tot bs"><td>Total Bs</td><td class="r">' + bs(tot * S.tasa) + '</td></tr></table>' +
+      '<div class="row" style="justify-content:flex-end;margin:12px 0 0"><button class="btn sec" onclick="X.vaciar()" ' + (carrito.length ? '' : 'disabled') + '>Vaciar</button><button class="btn" onclick="X.cobrar()" ' + (carrito.length ? '' : 'disabled') + '>' + (EN ? 'Charge ' : 'Cobrar ') + usd(tot) + '</button></div>';
   }
 
   /* --- Ventas --- */
@@ -260,10 +272,10 @@
     cDia = cDia || hoy(); const c = cajaDia(S, cDia); const hecho = S.cierres.find((x) => x.dia === cDia);
     return '<h1>Cierre de caja</h1><p class="sub">Lo que debió entrar por cada forma de pago. Cuenta el efectivo, escribe lo que hay y el sistema te dice la diferencia.</p>' +
       '<div class="row"><label class="f">Día<input type="date" class="inp" value="' + cDia + '" onchange="X.cdia(this.value)"></label>' + (hecho ? '<span class="tag ok" style="align-self:end;margin-bottom:8px">Cerrado ' + fdia(hecho.hecho) + ' ' + fhora(hecho.hecho) + '</span>' : '') + '</div>' +
-      '<div class="g2"><div class="card scroll"><h3>' + c.n + ' ventas · ' + usd(c.total) + '</h3><table><thead><tr><th>Forma de pago</th><th class="r">Ventas</th><th class="r">Monto $</th><th class="r">Monto Bs</th><th class="r">Contado</th><th class="r">Diferencia</th></tr></thead><tbody>' +
+      '<div class="g2"><div class="card"><h3>' + c.n + ' ventas · ' + usd(c.total) + '</h3><table><thead><tr><th>Forma de pago</th><th class="r hm">Ventas</th><th class="r">Monto $</th><th class="r bs hm">Monto Bs</th><th class="r">Contado</th><th class="r">Diferencia</th></tr></thead><tbody>' +
       Object.keys(c.por).map((p) => { const x = c.por[p]; const ef = EFECTIVO.includes(p); const enBs = p === 'Efectivo Bs'; const cont = hecho?.contado?.[p];
-        return '<tr><td>' + esc(p) + '</td><td class="r">' + x.n + '</td><td class="r">' + usd(x.usd) + '</td><td class="r">' + bs(x.bs) + '</td><td class="r">' + (ef ? '<input class="inp num" style="width:110px;text-align:right" inputmode="decimal" id="ct-' + PAGOS.indexOf(p) + '" placeholder="' + (enBs ? 'Bs' : '$') + '" value="' + (cont != null ? (enBs ? r2(cont * 1) : cont) : '') + '" oninput="X.dif()">' : '<span class="hint">por banco</span>') + '</td><td class="r" id="df-' + PAGOS.indexOf(p) + '"></td></tr>'; }).join('') +
-      '<tr class="tot"><td>Total</td><td class="r">' + c.n + '</td><td class="r">' + usd(c.total) + '</td><td class="r">' + bs(Object.values(c.por).reduce((a, x) => a + x.bs, 0)) + '</td><td></td><td></td></tr></tbody></table>' +
+        return '<tr><td class="wrap">' + esc(p) + '</td><td class="r hm">' + x.n + '</td><td class="r">' + usd(x.usd) + '</td><td class="r bs hm">' + bs(x.bs) + '</td><td class="r">' + (ef ? '<input class="inp num" style="width:72px;text-align:right" inputmode="decimal" id="ct-' + PAGOS.indexOf(p) + '" placeholder="' + (enBs ? 'Bs' : '$') + '" value="' + (cont != null ? (enBs ? r2(cont * 1) : cont) : '') + '" oninput="X.dif()">' : '<span class="hint">por banco</span>') + '</td><td class="r" id="df-' + PAGOS.indexOf(p) + '"></td></tr>'; }).join('') +
+      '<tr class="tot"><td>Total</td><td class="r hm">' + c.n + '</td><td class="r">' + usd(c.total) + '</td><td class="r bs hm">' + bs(Object.values(c.por).reduce((a, x) => a + x.bs, 0)) + '</td><td></td><td></td></tr></tbody></table>' +
       '<label class="f" style="margin-top:12px">Nota del cierre<input class="inp" id="cnota" value="' + esc(hecho?.nota || '') + '" placeholder="Ej.: se dio vuelto en Bs"></label>' +
       '<div class="row" style="justify-content:flex-end;margin:12px 0 0"><button class="btn" onclick="X.cerrarCaja()" ' + (c.n ? '' : 'disabled') + '>' + (hecho ? 'Actualizar cierre' : 'Guardar cierre') + '</button></div></div>' +
       '<div class="card scroll"><h3>Cierres anteriores</h3>' + (S.cierres.length ? '<table><thead><tr><th>Día</th><th class="r">Total</th><th>Efectivo</th></tr></thead><tbody>' + S.cierres.slice().sort((a, b) => b.dia.localeCompare(a.dia)).slice(0, 12).map((x) => { const d = difEf(x); return '<tr><td><button class="lnk" onclick="X.cdia(\'' + x.dia + '\')">' + fdia(x.dia) + '</button></td><td class="r">' + usd(x.total) + '</td><td>' + (Math.abs(d) < 0.01 ? '<span class="tag ok">Cuadra</span>' : '<span class="tag ' + (d < 0 ? 'bad' : 'warn') + '">' + (d < 0 ? 'Falta ' : 'Sobra ') + usd(Math.abs(d)) + '</span>') + '</td></tr>'; }).join('') + '</tbody></table>' : '<div class="empty">Aún no hay cierres</div>') + '</div></div>';
@@ -284,10 +296,10 @@
     const val = L.reduce((a, p) => a + Math.max(0, sm[p.id]) * p.costo, 0), valV = L.reduce((a, p) => a + Math.max(0, sm[p.id]) * p.precio, 0);
     return '<h1>Inventario</h1><p class="sub">La existencia se calcula sola: inicial + compras − ventas ± ajustes. El costo es promedio ponderado y se actualiza con cada compra.</p>' +
       '<div class="row"><input class="inp" style="max-width:260px" id="iq" placeholder="Buscar…" value="' + esc(iq) + '"><select class="inp" style="max-width:180px" onchange="X.icat(this.value)"><option value="">Todas las categorías</option>' + cats.map((c) => '<option' + (c === icat ? ' selected' : '') + '>' + esc(c) + '</option>').join('') + '</select><span class="sp"></span><button class="btn sec" onclick="X.csvInv()">Descargar CSV</button><button class="btn" onclick="X.producto()">+ Nuevo producto</button></div>' +
-      '<div class="card scroll"><table><thead><tr><th>Código</th><th>Producto</th><th>Categoría</th><th class="r">Exist.</th><th class="r">Mín.</th><th class="r">Costo $</th><th class="r">Precio $</th><th class="r">Precio Bs</th><th class="r">Margen</th><th class="r">Valor a costo</th><th>Estado</th><th></th></tr></thead><tbody>' +
-      (L.length ? L.map((p) => '<tr' + (p.activo ? '' : ' class="off"') + '><td>' + esc(p.cod) + '</td><td>' + esc(p.nombre) + '</td><td>' + esc(p.cat) + '</td><td class="r">' + qty(sm[p.id]) + '</td><td class="r">' + qty(p.min) + '</td><td class="r">' + nf2.format(p.costo) + '</td><td class="r">' + nf2.format(p.precio) + '</td><td class="r">' + nf2.format(r2(p.precio * S.tasa)) + '</td><td class="r">' + (p.precio ? Math.round((p.precio - p.costo) / p.precio * 100) + '%' : '—') + '</td><td class="r">' + usd(Math.max(0, sm[p.id]) * p.costo) + '</td><td>' + (p.activo ? estado(p, sm[p.id]) : '<span class="tag mut">Inactivo</span>') + '</td>' +
-        '<td><button class="lnk" onclick="X.producto(\'' + p.id + '\')">Editar</button> · <button class="lnk" onclick="X.ajuste(\'' + p.id + '\')">Ajustar</button> · <button class="lnk" onclick="X.kardex(\'' + p.id + '\')">Movimientos</button></td></tr>').join('') : '<tr><td colspan="12" class="empty">Sin productos</td></tr>') +
-      '<tr class="tot"><td colspan="9">' + L.length + ' productos · valor a precio de venta ' + usd(valV) + '</td><td class="r">' + usd(val) + '</td><td colspan="2"></td></tr></tbody></table></div>';
+      '<div class="card scroll"><table><thead><tr><th>Producto</th><th class="r">Exist.</th><th class="r">Mín.</th><th class="r">Costo $</th><th class="r">Precio $</th><th class="r bs">Precio Bs</th><th class="r">Margen</th><th class="r">Valor a costo</th><th>Estado</th><th></th></tr></thead><tbody>' +
+      (L.length ? L.map((p) => '<tr' + (p.activo ? '' : ' class="off"') + '><td class="wrap"><button class="lnk" style="text-align:left" onclick="X.producto(\'' + p.id + '\')"><b>' + esc(p.nombre) + '</b></button><div class="hint">' + esc(p.cod) + ' · ' + esc(p.cat) + '</div></td><td class="r">' + qty(sm[p.id]) + '</td><td class="r">' + qty(p.min) + '</td><td class="r">' + nf2.format(p.costo) + '</td><td class="r">' + nf2.format(p.precio) + '</td><td class="r bs">' + nf2.format(r2(p.precio * S.tasa)) + '</td><td class="r">' + (p.precio ? Math.round((p.precio - p.costo) / p.precio * 100) + '%' : '—') + '</td><td class="r">' + usd(Math.max(0, sm[p.id]) * p.costo) + '</td><td>' + (p.activo ? estado(p, sm[p.id]) : '<span class="tag mut">Inactivo</span>') + '</td>' +
+        '<td><button class="lnk" onclick="X.ajuste(\'' + p.id + '\')">Ajustar</button> · <button class="lnk" onclick="X.kardex(\'' + p.id + '\')">Movimientos</button></td></tr>').join('') : '<tr><td colspan="10" class="empty">Sin productos</td></tr>') +
+      '<tr class="tot"><td colspan="7">' + L.length + ' productos · valor a precio de venta ' + usd(valV) + '</td><td class="r">' + usd(val) + '</td><td colspan="2"></td></tr></tbody></table></div>';
   };
   A.inventario = () => { const q = $('iq'); q.oninput = () => { iq = q.value; const pos = q.selectionStart; go(); const n = $('iq'); n.focus(); n.setSelectionRange(pos, pos); }; };
 
@@ -310,13 +322,13 @@
   };
 
   /* --- Configuración --- */
-  V.config = () => '<h1>Configuración</h1><p class="sub">Datos del negocio, tasa del día y respaldo.</p>' +
+  V.config = () => '<h1>Configuración</h1><p class="sub">' + (EN ? 'Datos del negocio y respaldo.' : 'Datos del negocio, tasa del día y respaldo.') + '</p>' +
     '<div class="g2e"><div class="card"><h3>Negocio</h3><div class="form"><label class="f full">Nombre del negocio<input class="inp" id="neg" value="' + esc(S.negocio) + '"></label>' +
-    '<label class="f">Tasa del día (Bs por $)<input class="inp num" id="tas" inputmode="decimal" value="' + S.tasa + '"></label><label class="f">Fecha de la tasa<input class="inp" disabled value="' + fdia(S.tasaFecha) + '"></label></div>' +
+    '<label class="f bs">Tasa del día (Bs por $)<input class="inp num" id="tas" inputmode="decimal" value="' + S.tasa + '"></label><label class="f bs">Fecha de la tasa<input class="inp" disabled value="' + fdia(S.tasaFecha) + '"></label></div>' +
     '<div class="row" style="justify-content:flex-end;margin:12px 0 0"><button class="btn" onclick="X.guardarCfg()">Guardar</button></div></div>' +
     '<div class="card"><h3>Respaldo</h3><p class="hint" style="margin-top:0">Tus datos viven solo en este navegador. Descarga un respaldo para pasarlos a otro equipo o guardarlos.</p>' +
     '<div class="row"><button class="btn sec" onclick="X.respaldo()">Descargar respaldo (.json)</button><label class="btn sec" style="display:inline-block">Cargar respaldo<input type="file" accept=".json,application/json" hidden onchange="X.restaurar(this.files[0])"></label></div>' +
-    '<h3 style="margin-top:16px">Empezar de nuevo</h3><div class="row"><button class="btn sec" onclick="X.reset(\'demo\')">Volver a los datos de ejemplo</button><button class="btn danger" onclick="X.reset(\'vacio\')">Empezar en blanco</button></div></div></div>' +
+    '<h3 style="margin-top:16px">Empezar de nuevo</h3><div class="row"><button class="btn sec" onclick="X.reset(\'demo\')">Volver a los datos ficticios</button><button class="btn danger" onclick="X.reset(\'vacio\')">Empezar en blanco</button></div></div></div>' +
     '<div class="card"><h3>Qué hace este sistema</h3><ul style="margin:0;padding-left:18px;line-height:1.8"><li>Punto de venta con búsqueda, control de existencia y total en $ y Bs.</li><li>Compras que suben el inventario y recalculan el costo promedio.</li><li>Ajustes de inventario (merma, conteo físico) y movimientos por producto.</li><li>Cierre de caja por forma de pago con diferencia del efectivo contado.</li><li>Ganancia por venta y por período, alertas de reposición y exportes a CSV.</li></ul></div>';
 
   /* ---------- acciones ---------- */
@@ -356,7 +368,7 @@
       const v = S.ventas.find((x) => x.id === id);
       dlg('Recibo N° ' + String(v.num).padStart(5, '0'), '<div id="rc"><div style="text-align:center;margin-bottom:8px"><b>' + esc(S.negocio) + '</b><div class="hint">' + fdia(v.fecha) + ' ' + fhora(v.fecha) + (v.cliente ? ' · ' + esc(v.cliente) : '') + '</div></div>' +
         '<table><thead><tr><th>Producto</th><th class="r">Cant.</th><th class="r">Precio</th><th class="r">Total</th></tr></thead><tbody>' + v.items.map((x) => '<tr><td class="wrap">' + esc(prod(x.pid)?.nombre || '¿?') + '</td><td class="r">' + qty(x.cant) + '</td><td class="r">' + usd(x.precio) + '</td><td class="r">' + usd(x.cant * x.precio) + '</td></tr>').join('') +
-        '<tr class="tot"><td colspan="3">Total $</td><td class="r">' + usd(v.total) + '</td></tr><tr class="tot"><td colspan="3">Total Bs (tasa ' + nf2.format(v.tasa) + ')</td><td class="r">' + bs(v.total * v.tasa) + '</td></tr></tbody></table><p class="hint">Pago: ' + esc(v.pago) + (v.anulada ? ' · <b style="color:var(--bad)">ANULADA</b>' : '') + '</p></div>',
+        '<tr class="tot"><td colspan="3">Total $</td><td class="r">' + usd(v.total) + '</td></tr><tr class="tot bs"><td colspan="3">Total Bs (tasa ' + nf2.format(v.tasa) + ')</td><td class="r">' + bs(v.total * v.tasa) + '</td></tr></tbody></table><p class="hint">Pago: ' + esc(v.pago) + (v.anulada ? ' · <b style="color:var(--bad)">ANULADA</b>' : '') + '</p></div>',
         '<button class="btn sec" onclick="X.imprimir()">Imprimir</button><button class="btn" onclick="X.cerrar()">Listo</button>');
     },
     imprimir() {
@@ -410,7 +422,7 @@
         (id ? '<label class="f full" style="flex-direction:row;display:flex;gap:8px;align-items:center"><input type="checkbox" id="pa" ' + (p.activo ? 'checked' : '') + '> Activo (se puede vender y comprar)</label>' : '<label class="f">Existencia inicial<input class="inp num" id="pi" inputmode="decimal" value="0"></label>') +
         '<div class="full hint" id="pmg"></div></div>',
         '<button class="btn sec" onclick="X.cerrar()">Cancelar</button><button class="btn" onclick="X.guardarProd(' + (id ? '\'' + id + '\'' : '') + ')">Guardar</button>');
-      const mg = () => { const c = num($('pco').value), pr = num($('ppr').value); $('pmg').textContent = c > 0 && pr > 0 ? 'Margen ' + Math.round((pr - c) / pr * 100) + '% · ganas ' + usd(pr - c) + ' por unidad · precio en Bs ' + bs(pr * S.tasa) : ''; };
+      const mg = () => { const c = num($('pco').value), pr = num($('ppr').value); $('pmg').textContent = c > 0 && pr > 0 ? 'Margen ' + Math.round((pr - c) / pr * 100) + '% · ganas ' + usd(pr - c) + ' por unidad' + (EN ? '' : ' · precio en Bs ' + bs(pr * S.tasa)) : ''; };
       $('pco').oninput = mg; $('ppr').oninput = mg; mg();
     },
     guardarProd(id) {
@@ -502,10 +514,10 @@
       r.readAsText(f);
     },
     reset(modo) {
-      dlg(modo === 'demo' ? 'Volver a los datos de ejemplo' : 'Empezar en blanco', '<p>' + (modo === 'demo' ? 'Se borra lo que registraste y se cargan los datos de ejemplo.' : 'Se borra todo: productos, ventas, compras y cierres. Quedas con el sistema vacío para cargar tu negocio.') + ' Si quieres conservar algo, descarga un respaldo antes.</p>',
+      dlg(modo === 'demo' ? 'Volver a los datos ficticios' : 'Empezar en blanco', '<p>' + (modo === 'demo' ? 'Se borra lo que registraste y se cargan los datos ficticios.' : 'Se borra todo: productos, ventas, compras y cierres. Quedas con el sistema vacío para cargar tu negocio.') + ' Si quieres conservar algo, descarga un respaldo antes.</p>',
         '<button class="btn sec" onclick="X.cerrar()">Cancelar</button><button class="btn danger" onclick="X.okReset(\'' + modo + '\')">Sí, continuar</button>');
     },
-    okReset(modo) { S = modo === 'demo' ? seed() : blank(); save(); carrito = []; borrador = null; cerrar(); location.hash = modo === 'demo' ? 'panel' : 'inventario'; go(); toast(modo === 'demo' ? 'Datos de ejemplo cargados' : 'Sistema vacío. Empieza creando tus productos'); }
+    okReset(modo) { S = modo === 'demo' ? seed() : blank(); save(); carrito = []; borrador = null; cerrar(); location.hash = modo === 'demo' ? 'panel' : 'inventario'; go(); toast(modo === 'demo' ? 'Datos ficticios cargados' : 'Sistema vacío. Empieza creando tus productos'); }
   };
   function calcAj(m, n, st) { if (!isFinite(n)) return NaN; if (m === 'Conteo físico') return n - st; if (m === 'Corrección') return n; return -Math.abs(n); }
   function csv(rows) { return '﻿' + rows.map((r) => r.map((c) => { const s = String(c ?? ''); return /[";\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }).join(';')).join('\r\n'); }

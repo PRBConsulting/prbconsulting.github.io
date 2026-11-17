@@ -1,11 +1,13 @@
 /* X3 DATA · PRB Consulting
    Facturación con IVA, inventario, cuentas por cobrar y por pagar, costos, punto de equilibrio,
    estado de resultados y simulador. Todo se guarda en el navegador del visitante (localStorage).
-   Datos de ejemplo inventados. */
+   Datos ficticios. */
 (function () {
   'use strict';
-  const KEY = 'prb-x3-v1';
-  const PAGOS = ['Efectivo $', 'Efectivo Bs', 'Pago móvil', 'Punto de venta', 'Transferencia', 'Zelle'];
+  const KEY = 'prb-x3-v1' + PRB.sfx; const EN = PRB.en;
+  const PAGOS = PRB.pagos || ['Efectivo $', 'Efectivo Bs', 'Pago móvil', 'Punto de venta', 'Transferencia', 'Zelle'];
+  const TRF = !EN ? 'Transferencia' : PRB.region === 'CA' ? 'E-transfer' : 'Check';
+  const esEf = (p) => p === 'Cash' || String(p).startsWith('Efectivo');
   const MOTIVOS = ['Merma o daño', 'Vencido', 'Conteo físico', 'Consumo interno', 'Corrección'];
 
   /* ---------- utilidades ---------- */
@@ -19,16 +21,16 @@
   const diasEntre = (a, b) => Math.round((new Date(b.slice(0, 10) + 'T12:00') - new Date(a.slice(0, 10) + 'T12:00')) / 864e5);
   const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
   const nomMes = (ym) => MESES[+ym.slice(5, 7) - 1] + ' ' + ym.slice(0, 4);
-  const fdia = (iso) => iso ? iso.slice(8, 10) + '/' + iso.slice(5, 7) + '/' + iso.slice(0, 4) : '';
+  const fdia = PRB.fecha;
   const fhora = (iso) => iso && iso.length > 10 ? iso.slice(11, 16) : '';
-  const nf2 = new Intl.NumberFormat('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const nf0 = new Intl.NumberFormat('es-VE', { maximumFractionDigits: 0 });
+  const nf2 = new Intl.NumberFormat(PRB.loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const nf0 = new Intl.NumberFormat(PRB.loc, { maximumFractionDigits: 0 });
   const r2 = (v) => Math.round((+v + Number.EPSILON) * 100) / 100;
   const usd = (v) => (v < 0 ? '−$' : '$') + nf2.format(Math.abs(r2(v)));
-  const bs = (v) => 'Bs ' + nf2.format(r2(v));
-  const qty = (v) => new Intl.NumberFormat('es-VE', { maximumFractionDigits: 2 }).format(v);
-  const pct = (v) => (isFinite(v) ? Math.round(v * 1000) / 10 : 0).toString().replace('.', ',') + '%';
-  const num = (v) => { let s = String(v ?? '').trim(); if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.'); const x = parseFloat(s); return isFinite(x) ? x : NaN; };
+  const bs = (v) => (EN ? '' : 'Bs ' + nf2.format(r2(v)));
+  const qty = (v) => new Intl.NumberFormat(PRB.loc, { maximumFractionDigits: 2 }).format(v);
+  const pct = (v) => (isFinite(v) ? Math.round(v * 1000) / 10 : 0).toString().replace('.', EN ? '.' : ',') + '%';
+  const num = PRB.num;
   const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const nfac = (n) => String(n).padStart(6, '0');
@@ -39,13 +41,13 @@
   function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { toast('No se pudo guardar en este navegador', true); } }
   function load() { try { const r = localStorage.getItem(KEY); if (r) { S = JSON.parse(r); if (S && S.v === 1) return; } } catch (e) { /* sin almacenamiento */ } S = seed(); save(); }
   function blank() {
-    return { v: 1, empresa: 'Mi empresa', rif: '', tasa: 52.4, tasaFecha: hoy(), iva: 16, varPct: 0, seq: { venta: 1, compra: 1 },
+    return { v: 1, empresa: 'Mi empresa', rif: '', tasa: 52.4, tasaFecha: hoy(), iva: EN ? PRB.taxRate : 16, varPct: 0, seq: { venta: 1, compra: 1 },
       productos: [], clientes: [], proveedores: [], ventas: [], compras: [], ajustes: [],
       fijos: [{ id: uid(), nombre: 'Alquiler', monto: 0 }, { id: uid(), nombre: 'Sueldos', monto: 0 }, { id: uid(), nombre: 'Servicios', monto: 0 }] };
   }
   function seed() {
     const st = blank();
-    st.empresa = 'Comercializadora Demo, C.A.'; st.rif = 'J-00000000-0'; st.varPct = 3;
+    st.empresa = EN ? 'Demo Wholesale Inc.' : 'Comercializadora Demo, C.A.'; st.rif = EN ? '' : 'J-00000000-0'; st.varPct = 3;
     let s = 31; const rnd = () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
     const P = [ // código, nombre, categoría, unidad, costo, precio (sin IVA), mínimo, exento
       ['ALI-01', 'Harina de maíz 1 kg (bulto 20)', 'Alimentos', 'Bulto', 15.2, 18.9, 15, true],
@@ -63,16 +65,30 @@
       ['LIM-03', 'Papel higiénico x4 (paca 12)', 'Limpieza', 'Paca', 17.0, 22.5, 8, false],
       ['CON-01', 'Tequeños congelados x12 (caja 10)', 'Congelados', 'Caja', 40.0, 54.0, 4, false]
     ];
+    if (EN) P.splice(0, P.length,
+      ['GRO-01', 'Long grain rice 8 kg (case 4)', 'Grocery', 'Case', 26.0, 33.5, 10, true], ['GRO-02', 'Spaghetti 900 g (case 12)', 'Grocery', 'Case', 12.5, 16.9, 10, true],
+      ['GRO-03', 'All-purpose flour 10 kg', 'Grocery', 'Bag', 11.8, 15.4, 12, true], ['GRO-04', 'Canola oil 3 L (case 6)', 'Grocery', 'Case', 34.0, 43.5, 8, true],
+      ['GRO-05', 'Ground coffee 925 g (case 6)', 'Grocery', 'Case', 58.0, 74.0, 5, true], ['GRO-06', 'Granulated sugar 4 kg (case 4)', 'Grocery', 'Case', 17.5, 22.0, 8, true],
+      ['GRO-07', 'Canned tuna 170 g (case 24)', 'Grocery', 'Case', 26.5, 34.9, 6, true], ['BEV-01', 'Cola 355 ml (case 24)', 'Drinks', 'Case', 9.8, 13.5, 15, false],
+      ['BEV-02', 'Spring water 500 ml (case 24)', 'Drinks', 'Case', 3.6, 5.2, 15, false], ['BEV-03', 'Orange juice 1.75 L (case 6)', 'Drinks', 'Case', 15.0, 20.4, 8, true],
+      ['HOM-01', 'Laundry detergent 4 L (case 4)', 'Household', 'Case', 29.0, 38.9, 6, false], ['HOM-02', 'Bleach 3.5 L (case 6)', 'Household', 'Case', 12.0, 16.8, 8, false],
+      ['HOM-03', 'Paper towels 6 rolls (case 4)', 'Household', 'Case', 18.5, 24.5, 8, false], ['FRZ-01', 'Frozen cheese sticks 12 (case 10)', 'Frozen', 'Case', 42.0, 56.0, 4, true]);
     const ini = [60, 40, 40, 30, 16, 30, 20, 60, 60, 25, 18, 25, 25, 12];
     st.productos = P.map((p, i) => ({ id: 'p' + (i + 1), barras: '75900000' + String(1001 + i * 7), cod: p[0], nombre: p[1], cat: p[2], unidad: p[3], costo: p[4], precio: p[5], min: p[6], exento: p[7], inicial: ini[i], activo: true }));
+    if (EN) {
+      st.clientes = [['Sunrise Convenience', 7], ['Maple Corner Store', 15], ['Main Street Bakery', 15], ['Harbor Deli', 30], ['QuickStop 24', 7], ['Campus Café', 0], ['Lakeview Grill', 15], ['Northside Market', 30]]
+        .map((c, i) => ({ id: 'c' + (i + 1), nombre: c[0], rif: '', dias: c[1] }));
+      st.proveedores = [['Northern Foods Wholesale', 15], ['Metro Beverages', 7], ['CleanCo Supply', 30], ['Prisma Foods', 7]].map((p, i) => ({ id: 'v' + (i + 1), nombre: p[0], rif: '', dias: p[1] }));
+    } else {
     st.clientes = [
       ['Bodega El Sol', 'J-10000001-1', 7], ['Abasto La Fe', 'J-10000002-2', 15], ['Panadería Central', 'J-10000003-3', 15], ['Comercial Rivas', 'J-10000004-4', 30],
       ['Minimarket 24', 'J-10000005-5', 7], ['Cafetín Universitario', 'J-10000006-6', 0], ['Restaurante Don Pepe', 'J-10000007-7', 15], ['Supermercado Los Andes', 'J-10000008-8', 30]
     ].map((c, i) => ({ id: 'c' + (i + 1), nombre: c[0], rif: c[1], dias: c[2] }));
     st.proveedores = [['Distribuidora Andina', 'J-20000001-1', 15], ['Bebidas del Centro', 'J-20000002-2', 7], ['Químicos Unidos', 'J-20000003-3', 30], ['Alimentos Prisma', 'J-20000004-4', 7]]
       .map((p, i) => ({ id: 'v' + (i + 1), nombre: p[0], rif: p[1], dias: p[2] }));
-    const PROV = { Alimentos: 'v1', Bebidas: 'v2', Limpieza: 'v3', Congelados: 'v4' };
-    st.fijos = [['Alquiler del galpón', 450], ['Sueldos y beneficios', 1850], ['Servicios (luz, agua, internet)', 190], ['Mantenimiento del camión', 160], ['Contador y trámites', 120], ['Publicidad', 100], ['Depreciación de equipos', 85]].map((f) => ({ id: uid(), nombre: f[0], monto: f[1] }));
+    }
+    const PROV = { Alimentos: 'v1', Bebidas: 'v2', Limpieza: 'v3', Congelados: 'v4', Grocery: 'v1', Drinks: 'v2', Household: 'v3', Frozen: 'v4' };
+    st.fijos = (EN ? [['Warehouse rent', 900], ['Wages and benefits', 1900], ['Utilities (power, water, internet)', 220], ['Truck lease and upkeep', 250], ['Accounting and licen' + (PRB.region === 'CA' ? 'c' : 's') + 'es', 150], ['Advertising', 100], ['Equipment depreciation', 90]] : [['Alquiler del galpón', 450], ['Sueldos y beneficios', 1850], ['Servicios (luz, agua, internet)', 190], ['Mantenimiento del camión', 160], ['Contador y trámites', 120], ['Publicidad', 100], ['Depreciación de equipos', 85]]).map((f) => ({ id: uid(), nombre: f[0], monto: f[1] }));
     const stock = {}; st.productos.forEach((p) => (stock[p.id] = p.inicial));
     const DIAS = 120, t0 = hoy(); let tasa = 52.4 - DIAS * 0.05;
     const cobrosPend = []; // [fechaPago, ventaRef]
@@ -87,7 +103,7 @@
           const prov = st.proveedores.find((x) => x.id === pv); const tot = r2(items.reduce((a, x) => a + x.cant * x.costo, 0));
           const c = { id: uid(), num: st.seq.compra++, fecha: dia + 'T08:00', prov: pv, factura: 'F-' + (5000 + Math.floor(rnd() * 4000)), cond: prov.dias ? 'credito' : 'contado', vence: addDays(dia, prov.dias), items, total: tot, pagos: [], anulada: false };
           const fp = addDays(dia, prov.dias + Math.floor(rnd() * 5) - 1);
-          if (fp <= t0 && !(k < 20 && rnd() < 0.5)) c.pagos.push({ id: uid(), fecha: fp > dia ? fp : dia, monto: tot, pago: 'Transferencia' });
+          if (fp <= t0 && !(k < 20 && rnd() < 0.5)) c.pagos.push({ id: uid(), fecha: fp > dia ? fp : dia, monto: tot, pago: TRF });
           st.compras.push(c);
         });
       }
@@ -105,7 +121,8 @@
         const credito = cl.dias > 0 && rnd() < 0.75;
         const fecha = dia + 'T' + pad(8 + Math.floor(v / nv * 9)) + ':' + pad(Math.floor(rnd() * 60));
         const vta = armarVenta(st, { fecha, cli: cl.id, cond: credito ? 'credito' : 'contado', dias: cl.dias, tasa, items });
-        const pr = rnd(); const pago = pr < 0.35 ? 'Transferencia' : pr < 0.6 ? 'Pago móvil' : pr < 0.8 ? 'Efectivo $' : pr < 0.9 ? 'Zelle' : 'Punto de venta';
+        const pr = rnd(); let pago = pr < 0.35 ? 'Transferencia' : pr < 0.6 ? 'Pago móvil' : pr < 0.8 ? 'Efectivo $' : pr < 0.9 ? 'Zelle' : 'Punto de venta';
+        if (EN) pago = pr < 0.45 ? TRF : PAGOS[pr < 0.65 ? 0 : pr < 0.85 ? 1 : 2];
         if (!credito) vta.abonos.push({ id: uid(), fecha: dia, monto: vta.total, pago });
         else {
           const tarde = rnd(); const fp = addDays(dia, cl.dias + (tarde < 0.6 ? -2 : tarde < 0.85 ? 6 : 25));
@@ -165,12 +182,12 @@
   function nav() {
     $('nav').innerHTML = '<div class="brand">X3 DATA<small>Gestión comercial y costos</small></div>' +
       NAV.map((g) => '<div class="grp">' + g[0] + '</div>' + g[1].map((x) => '<button' + (x[0] === vista ? ' class="on"' : '') + ' onclick="location.hash=\'' + x[0] + '\'">' + x[1] + '</button>').join('')).join('') +
-      '<div class="tasa">Tasa del día<b>' + bs(S.tasa) + ' por $</b><button class="lnk" style="color:#cfe8da;margin-top:4px" onclick="X.tasa()">Cambiar tasa</button></div>';
+      (EN ? '' : '<div class="tasa">Tasa del día<b>' + bs(S.tasa) + ' por $</b><button class="lnk" style="color:#cfe8da;margin-top:4px" onclick="X.tasa()">Cambiar tasa</button></div>');
   }
   function go(keepScroll) {
     const k = location.hash.slice(1); vista = V[k] ? k : 'panel'; nav();
     const y = window.scrollY;
-    $('m').innerHTML = V[vista]() + '<div class="foot">X3 DATA · hecho por <a href="../">PRB Consulting</a>. Demo con datos inventados: lo que registres se guarda solo en este navegador. Puedes volver a los datos de ejemplo en Configuración.</div>';
+    $('m').innerHTML = V[vista]() + '<div class="foot">X3 DATA · hecho por <a href="../">PRB Consulting</a>. Demo con datos ficticios: lo que registres se guarda solo en este navegador. Puedes volver a los datos ficticios en Configuración.</div>';
     if (A[vista]) A[vista](); window.scrollTo(0, keepScroll ? y : 0);
   }
   window.addEventListener('hashchange', () => go());
@@ -192,7 +209,7 @@
     let acum = 0, diaPE = null; const porDia = {}; a.L.forEach((v) => { const d = v.fecha.slice(0, 10); porDia[d] = (porDia[d] || 0) + (v.sub - costoV(v) - v.sub * S.varPct / 100); });
     Object.keys(porDia).sort().forEach((d) => { acum += porDia[d]; if (!diaPE && acum >= cfMes) diaPE = d; });
     const bajos = S.productos.filter((p) => p.activo && sm[p.id] <= p.min);
-    return '<h1>' + esc(S.empresa) + '</h1><p class="sub">' + nomMes(ym) + ' al día ' + +h.slice(8) + ' · tasa ' + bs(S.tasa) + ' por $</p>' +
+    return '<h1>' + esc(S.empresa) + '</h1><p class="sub">' + nomMes(ym) + ' al día ' + +h.slice(8) + (EN ? '' : ' · tasa ' + bs(S.tasa) + ' por $') + '</p>' +
       '<div class="kpis">' + kpi(usd(a.ventas), 'Ventas del mes sin IVA · ' + a.L.length + ' facturas') + kpi(usd(a.mc), 'Margen de contribución · ' + pct(a.mcPct), 'var(--ok)') + kpi(usd(cxc), 'Por cobrar · vencido ' + usd(cxcV), 'var(--warn)') + kpi(usd(cxp), 'Por pagar · ' + usd(cxp7) + ' vence en 7 días', 'var(--bad)') + '</div>' +
       '<div class="g2"><div class="card"><h3>¿Ya cubrimos los costos fijos del mes?</h3>' +
       '<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span>Vendido <b>' + usd(a.ventas) + '</b></span><span>Punto de equilibrio del mes <b>' + (isFinite(peMes) ? usd(peMes) : '—') + '</b></span></div>' +
@@ -202,20 +219,20 @@
       '<p class="hint" style="margin:6px 0 0">Punto de equilibrio = costos fijos ÷ % de margen de contribución. <button class="lnk" onclick="location.hash=\'costos\'">Ver el análisis completo</button></p></div>' +
       '<div class="card"><h3>Lo que más deja este mes</h3>' + Object.entries(a.porP).map(([k, o]) => [k, o.ventas - o.costo]).sort((x, y) => y[1] - x[1]).slice(0, 6).map((t, i, arr) => '<div class="hb"><span class="l">' + esc(prod(t[0])?.nombre.replace(/ \(.*\)/, '')) + '</span><span class="b"><i style="width:' + t[1] / arr[0][1] * 100 + '%"></i></span><span class="v">' + usd(t[1]) + '</span></div>').join('') + '</div></div>' +
       '<div class="g2e"><div class="card scroll"><h3>Facturas vencidas</h3>' + tablaDocs(vivas().filter((v) => saldo(v) > 0 && v.vence < h).sort((x, y) => x.vence.localeCompare(y.vence)).slice(0, 6), 'v', true) + '</div>' +
-      '<div class="card scroll"><h3>Por reponer</h3>' + (bajos.length ? '<table><thead><tr><th>Producto</th><th class="r">Exist.</th><th class="r">Mín.</th></tr></thead><tbody>' + bajos.map((p) => '<tr><td>' + esc(p.nombre) + '</td><td class="r">' + qty(sm[p.id]) + '</td><td class="r">' + qty(p.min) + '</td></tr>').join('') + '</tbody></table>' : '<div class="empty">Todo sobre el mínimo</div>') + '</div></div>';
+      '<div class="card scroll"><h3>Por reponer</h3>' + (bajos.length ? '<table><thead><tr><th>Producto</th><th class="r">Exist.</th><th class="r">Mín.</th></tr></thead><tbody>' + bajos.map((p) => '<tr><td class="wrap">' + esc(p.nombre) + '</td><td class="r">' + qty(sm[p.id]) + '</td><td class="r">' + qty(p.min) + '</td></tr>').join('') + '</tbody></table>' : '<div class="empty">Todo sobre el mínimo</div>') + '</div></div>';
   };
 
   function tablaDocs(L, tipo, corta) {
     if (!L.length) return '<div class="empty">' + (tipo === 'v' ? 'No hay facturas' : 'No hay compras') + '</div>';
     const nom = (d) => (tipo === 'v' ? cliNom(d.cli) : prov(d.prov)?.nombre);
-    return '<table><thead><tr><th>N°</th>' + (corta ? '' : '<th>Fecha</th>') + '<th>' + (tipo === 'v' ? 'Cliente' : 'Proveedor') + '</th>' + (corta ? '' : '<th>Condición</th><th class="r">Total $</th><th class="r">' + (tipo === 'v' ? 'Cobrado' : 'Pagado') + '</th>') + '<th class="r">Saldo $</th><th>Estado</th>' + (corta ? '' : '<th></th>') + '</tr></thead><tbody>' +
-      L.map((d) => '<tr' + (d.anulada ? ' class="off"' : '') + '><td><button class="lnk" onclick="X.' + (tipo === 'v' ? 'verFactura' : 'verCompra') + '(\'' + d.id + '\')">' + (tipo === 'v' ? nfac(d.num) : String(d.num).padStart(4, '0')) + '</button></td>' + (corta ? '' : '<td>' + fdia(d.fecha) + '</td>') + '<td class="wrap">' + esc(nom(d)) + '</td>' +
-        (corta ? '' : '<td>' + (d.cond === 'credito' ? 'Crédito · vence ' + fdia(d.vence) : 'Contado') + '</td><td class="r">' + usd(d.total) + '</td><td class="r">' + usd(pagado(d)) + '</td>') + '<td class="r"><b>' + usd(d.anulada ? 0 : saldo(d)) + '</b></td><td>' + tagSaldo(d) + '</td>' +
+    return '<table><thead><tr><th>N°</th>' + (corta ? '' : '<th class="hm">Fecha</th>') + '<th>' + (tipo === 'v' ? 'Cliente' : 'Proveedor') + '</th>' + (corta ? '' : '<th class="hm">Condición</th><th class="r hm">Total $</th><th class="r hm">' + (tipo === 'v' ? 'Cobrado' : 'Pagado') + '</th>') + '<th class="r">Saldo $</th><th>Estado</th>' + (corta ? '' : '<th></th>') + '</tr></thead><tbody>' +
+      L.map((d) => '<tr' + (d.anulada ? ' class="off"' : '') + '><td><button class="lnk" onclick="X.' + (tipo === 'v' ? 'verFactura' : 'verCompra') + '(\'' + d.id + '\')">' + (tipo === 'v' ? nfac(d.num) : String(d.num).padStart(4, '0')) + '</button></td>' + (corta ? '' : '<td class="hm">' + fdia(d.fecha) + '</td>') + '<td class="wrap">' + esc(nom(d)) + '</td>' +
+        (corta ? '' : '<td class="hm">' + (d.cond === 'credito' ? 'Crédito · vence ' + fdia(d.vence) : 'Contado') + '</td><td class="r hm">' + usd(d.total) + '</td><td class="r hm">' + usd(pagado(d)) + '</td>') + '<td class="r"><b>' + usd(d.anulada ? 0 : saldo(d)) + '</b></td><td class="wrap">' + tagSaldo(d) + '</td>' +
         (corta ? '' : '<td>' + (!d.anulada && saldo(d) > 0 ? '<button class="btn sm" onclick="X.' + (tipo === 'v' ? 'abonar' : 'pagarCompra') + '(\'' + d.id + '\')">' + (tipo === 'v' ? 'Cobrar' : 'Pagar') + '</button>' : '') + '</td>') + '</tr>').join('') + '</tbody></table>';
   }
 
   /* --- Facturar --- */
-  let F = { items: [], cli: '', cond: 'contado', pago: 'Transferencia', q: '' };
+  let F = { items: [], cli: '', cond: 'contado', pago: TRF, q: '' };
   V.facturar = () => '<h1>Facturar</h1><p class="sub">Elige el cliente, agrega productos y el sistema revisa la existencia, aplica el IVA a lo gravado y lleva la factura a crédito o contado.</p>' +
     '<div class="g2"><div class="card"><div class="row"><input id="q" class="inp" placeholder="Buscar producto por nombre o código…" value="' + esc(F.q) + '" autocomplete="off"></div><div id="cat" class="scroll"></div></div><div class="card" id="cart"></div></div><button class="fab" id="fab" hidden onclick="document.getElementById(\'cart\').scrollIntoView({behavior:\'smooth\'})"></button>';
   A.facturar = () => { const q = $('q'); q.oninput = () => { F.q = q.value; pintarCat(); }; q.onkeydown = (e) => { if (e.key === 'Enter') { const b = $('cat').querySelector('button[data-p]:not([disabled])'); if (b) b.click(); } }; pintarCat(); pintarCart(); };
@@ -223,7 +240,7 @@
     const sm = stockMap(); const f = F.q.toLowerCase().trim();
     const L = S.productos.filter((p) => p.activo && (!f || (p.nombre + ' ' + p.cod).toLowerCase().includes(f)));
     $('cat').innerHTML = L.length ? '<table><thead><tr><th>Producto</th><th class="r">Precio</th><th class="r">Exist.</th><th></th></tr></thead><tbody>' + L.map((p) => { const st = sm[p.id] - (F.items.find((x) => x.pid === p.id)?.cant || 0);
-      return '<tr><td class="wrap"><b>' + esc(p.nombre) + '</b><div class="hint">' + esc(p.cod) + ' · ' + (p.exento ? 'Exento' : 'IVA ' + S.iva + '%') + '</div></td><td class="r"><b>' + usd(p.precio) + '</b><div class="hint">' + bs(p.precio * S.tasa) + '</div></td><td class="r">' + (st <= 0 ? '<span class="tag bad">0</span>' : qty(st)) + '</td><td><button class="btn" style="min-width:44px" aria-label="Agregar" data-p="' + p.id + '"' + (st <= 0 ? ' disabled' : '') + ' onclick="X.agregar(\'' + p.id + '\')">+</button></td></tr>'; }).join('') + '</tbody></table>' : '<div class="empty">No hay productos con ese nombre.</div>';
+      return '<tr><td class="wrap"><b>' + esc(p.nombre) + '</b><div class="hint">' + esc(p.cod) + ' · ' + (p.exento ? 'Exento' : 'IVA ' + S.iva + '%') + '</div></td><td class="r"><b>' + usd(p.precio) + '</b>' + (EN ? '' : '<div class="hint">' + bs(p.precio * S.tasa) + '</div>') + '</td><td class="r">' + (st <= 0 ? '<span class="tag bad">0</span>' : qty(st)) + '</td><td><button class="btn" style="min-width:44px" aria-label="Agregar" data-p="' + p.id + '"' + (st <= 0 ? ' disabled' : '') + ' onclick="X.agregar(\'' + p.id + '\')">+</button></td></tr>'; }).join('') + '</tbody></table>' : '<div class="empty">No hay productos con ese nombre.</div>';
   }
   function totF() { const sub = F.items.reduce((a, x) => a + x.cant * x.precio, 0); const grav = F.items.filter((x) => !prod(x.pid).exento).reduce((a, x) => a + x.cant * x.precio, 0); const iva = grav * S.iva / 100; return { sub, grav, iva, total: sub + iva }; }
   function pintarCart() {
@@ -234,13 +251,13 @@
       '<label class="f">Condición<select class="inp" onchange="X.fset(\'cond\',this.value)"><option value="contado"' + (F.cond === 'contado' ? ' selected' : '') + '>Contado</option>' + (c && c.dias > 0 ? '<option value="credito"' + (F.cond === 'credito' ? ' selected' : '') + '>Crédito ' + c.dias + ' días</option>' : '') + '</select></label>' +
       (F.cond === 'contado' ? '<label class="f">Forma de pago<select class="inp" onchange="X.fset(\'pago\',this.value)">' + PAGOS.map((p) => '<option' + (p === F.pago ? ' selected' : '') + '>' + p + '</option>').join('') + '</select></label>' : '<label class="f">Vence<input class="inp" disabled value="' + fdia(addDays(hoy(), c.dias)) + '"></label>') + '</div>' +
       (F.items.length ? '<div class="scroll" style="margin-top:12px"><table><thead><tr><th>Producto</th><th class="r">Cant.</th><th class="r">Subtotal</th><th></th></tr></thead><tbody>' + F.items.map((x, i) => '<tr><td class="wrap">' + esc(prod(x.pid).nombre) + '<div class="hint">' + usd(x.precio) + ' c/u' + (prod(x.pid).exento ? ' · exento' : '') + '</div></td><td class="r"><input class="inp num" style="width:64px;text-align:right" inputmode="decimal" value="' + x.cant + '" onchange="X.fcant(' + i + ',this.value)"></td><td class="r">' + usd(x.cant * x.precio) + '</td><td><button class="x" aria-label="Quitar" onclick="X.fquitar(' + i + ')">×</button></td></tr>').join('') + '</tbody></table></div>' : '<div class="empty">Agrega productos desde la lista</div>') +
-      '<table style="margin-top:10px"><tr><td>Base imponible</td><td class="r">' + usd(t.grav) + '</td></tr><tr><td>Exento</td><td class="r">' + usd(t.sub - t.grav) + '</td></tr><tr><td>IVA ' + S.iva + '%</td><td class="r">' + usd(t.iva) + '</td></tr><tr class="tot"><td>Total $</td><td class="r">' + usd(t.total) + '</td></tr><tr class="tot"><td>Total Bs</td><td class="r">' + bs(t.total * S.tasa) + '</td></tr></table>' +
+      '<table style="margin-top:10px"><tr><td>Base imponible</td><td class="r">' + usd(t.grav) + '</td></tr><tr><td>Exento</td><td class="r">' + usd(t.sub - t.grav) + '</td></tr><tr><td>IVA ' + S.iva + '%</td><td class="r">' + usd(t.iva) + '</td></tr><tr class="tot"><td>Total $</td><td class="r">' + usd(t.total) + '</td></tr><tr class="tot bs"><td>Total Bs</td><td class="r">' + bs(t.total * S.tasa) + '</td></tr></table>' +
       '<div class="row" style="justify-content:flex-end;margin:12px 0 0"><button class="btn sec" onclick="X.fvaciar()"' + (F.items.length ? '' : ' disabled') + '>Vaciar</button><button class="btn" onclick="X.facturarOk()"' + (F.items.length ? '' : ' disabled') + '>Emitir factura</button></div>';
   }
 
   /* --- Caja rápida (supermercado) --- */
-  let K = { items: [], q: '', sel: 0, ult: null, pagando: false, pago: 'Efectivo $', recibido: '' };
-  const KPAG = ['Efectivo $', 'Efectivo Bs', 'Pago móvil', 'Punto de venta', 'Zelle', 'Transferencia'];
+  let K = { items: [], q: '', sel: 0, ult: null, pagando: false, pago: (PRB.pagos || ['Efectivo $'])[0], recibido: '' };
+  const KPAG = PRB.pagos || ['Efectivo $', 'Efectivo Bs', 'Pago móvil', 'Punto de venta', 'Zelle', 'Transferencia'];
   function buscarK(q) {
     q = q.trim().toLowerCase(); if (!q) return [];
     const exacto = S.productos.filter((p) => p.activo && ((p.barras || '') === q || p.cod.toLowerCase() === q));
@@ -285,13 +302,13 @@
   function pintarK() {
     const t = totK(); const c = $('kcart'); if (!c) return;
     if (K.pagando) {
-      const rec = num(K.recibido); const enBs = K.pago === 'Efectivo Bs'; const tot = enBs ? t.total * S.tasa : t.total; const vuelto = isFinite(rec) ? rec - tot : NaN; const ef = K.pago.startsWith('Efectivo');
+      const rec = num(K.recibido); const enBs = K.pago === 'Efectivo Bs'; const tot = enBs ? t.total * S.tasa : t.total; const vuelto = isFinite(rec) ? rec - tot : NaN; const ef = esEf(K.pago);
       c.innerHTML = '<h3>Cobrar</h3><div class="ktot"><span>Total</span><b>' + usd(t.total) + '</b><small>' + bs(t.total * S.tasa) + '</small></div>' +
         '<div class="kpay">' + KPAG.map((p, i) => '<button class="' + (p === K.pago ? 'on' : '') + '" onclick="X.kpago(\'' + p + '\')"><small>' + (i + 1) + '</small>' + p + '</button>').join('') + '</div>' +
         (ef ? '<label class="f" style="margin-top:12px">Recibido en ' + (enBs ? 'Bs' : '$') + '<input id="krec" class="inp" style="font-size:22px;text-align:right" inputmode="decimal" value="' + esc(K.recibido) + '" placeholder="' + nf2.format(r2(tot)) + '"></label>' +
-          '<div class="kvuelto">' + (isFinite(vuelto) ? (vuelto < -0.004 ? '<span style="color:var(--bad)">Faltan ' + (enBs ? bs(-vuelto) : usd(-vuelto)) + '</span>' : 'Vuelto <b>' + (enBs ? bs(vuelto) : usd(vuelto)) + '</b>' + (enBs ? '' : ' <small>(' + bs(vuelto * S.tasa) + ')</small>')) : '&nbsp;') + '</div>' : '<p class="hint" style="margin:14px 0">Confirma que el pago llegó y presiona Enter.</p>') +
+          '<div class="kvuelto">' + (isFinite(vuelto) ? (vuelto < -0.004 ? '<span style="color:var(--bad)">Faltan ' + (enBs ? bs(-vuelto) : usd(-vuelto)) + '</span>' : 'Vuelto <b>' + (enBs ? bs(vuelto) : usd(vuelto)) + '</b>' + (enBs || EN ? '' : ' <small>(' + bs(vuelto * S.tasa) + ')</small>')) : '&nbsp;') + '</div>' : '<p class="hint" style="margin:14px 0">Confirma que el pago llegó y presiona Enter.</p>') +
         '<div class="row" style="margin:10px 0 0"><button class="btn sec" onclick="X.kvolver()">Volver (Esc)</button><span class="sp"></span><button class="btn" style="font-size:17px;padding:12px 20px" onclick="X.kconfirmar()">Confirmar (Enter)</button></div>';
-      const r = $('krec'); if (r) { r.oninput = () => { K.recibido = r.value; const v = c.querySelector('.kvuelto'); const rr = num(r.value); const vv = isFinite(rr) ? rr - tot : NaN; v.innerHTML = isFinite(vv) ? (vv < -0.004 ? '<span style="color:var(--bad)">Faltan ' + (enBs ? bs(-vv) : usd(-vv)) + '</span>' : 'Vuelto <b>' + (enBs ? bs(vv) : usd(vv)) + '</b>' + (enBs ? '' : ' <small>(' + bs(vv * S.tasa) + ')</small>')) : '&nbsp;'; }; r.focus(); }
+      const r = $('krec'); if (r) { r.oninput = () => { K.recibido = r.value; const v = c.querySelector('.kvuelto'); const rr = num(r.value); const vv = isFinite(rr) ? rr - tot : NaN; v.innerHTML = isFinite(vv) ? (vv < -0.004 ? '<span style="color:var(--bad)">Faltan ' + (enBs ? bs(-vv) : usd(-vv)) + '</span>' : 'Vuelto <b>' + (enBs ? bs(vv) : usd(vv)) + '</b>' + (enBs || EN ? '' : ' <small>(' + bs(vv * S.tasa) + ')</small>')) : '&nbsp;'; }; r.focus(); }
       return;
     }
     c.innerHTML = '<div class="row" style="margin-bottom:6px"><h3 style="margin:0">Venta en curso</h3><span class="sp"></span>' + (K.items.length ? '<button class="lnk bad" onclick="X.kvaciar()">Cancelar venta</button>' : '') + '</div>' +
@@ -305,7 +322,7 @@
     if (e.key === 'F2') { e.preventDefault(); if (K.pagando) X.kconfirmar(); else X.kcobrar(); }
     else if (e.key === 'Escape') { e.preventDefault(); if (K.pagando) X.kvolver(); else { K.q = ''; const q = $('kq'); if (q) { q.value = ''; sugK(); } } }
     else if (K.pagando && e.key === 'Enter') { e.preventDefault(); X.kconfirmar(); }
-    else if (K.pagando && /^[1-6]$/.test(e.key) && document.activeElement?.id !== 'krec') { e.preventDefault(); X.kpago(KPAG[+e.key - 1]); }
+    else if (K.pagando && /^[1-6]$/.test(e.key) && KPAG[+e.key - 1] && document.activeElement?.id !== 'krec') { e.preventDefault(); X.kpago(KPAG[+e.key - 1]); }
   });
 
   /* --- Facturas --- */
@@ -331,9 +348,9 @@
     const credMes = vivas().filter((v) => v.cond === 'credito' && v.fecha.slice(0, 7) === h.slice(0, 7)).reduce((a, v) => a + v.total, 0);
     return '<h1>Cuentas por cobrar</h1><p class="sub">Quién te debe, cuánto y desde cuándo. La antigüedad se cuenta desde la fecha de vencimiento de cada factura.</p>' +
       '<div class="kpis">' + kpi(usd(T), 'Total por cobrar · ' + P.length + ' facturas') + kpi(usd(T - tot[0]), 'Vencido · ' + pct(T ? (T - tot[0]) / T : 0) + ' del total', 'var(--bad)') + kpi(usd(cobradoMes), 'Cobrado este mes', 'var(--ok)') + kpi(usd(credMes), 'Vendido a crédito este mes', 'var(--gold)') + '</div>' +
-      '<div class="card scroll" style="margin-bottom:12px"><h3>Antigüedad de saldos por cliente</h3><table><thead><tr><th>Cliente</th><th class="r">Facturas</th>' + B.map((b) => '<th class="r">' + b[0] + '</th>').join('') + '<th class="r">Total</th><th></th></tr></thead><tbody>' +
-      (Object.keys(por).length ? Object.entries(por).sort((a, b) => b[1].t - a[1].t).map(([k, o]) => '<tr><td>' + esc(cliNom(k)) + '</td><td class="r">' + o.n + '</td>' + o.b.map((x, i) => '<td class="r" style="color:' + (x && i > 1 ? 'var(--bad)' : x && i ? 'var(--warn)' : 'inherit') + '">' + (x ? usd(x) : '—') + '</td>').join('') + '<td class="r"><b>' + usd(o.t) + '</b></td><td><button class="lnk" onclick="X.estadoCuenta(\'' + k + '\')">Estado de cuenta</button></td></tr>').join('') : '<tr><td colspan="8" class="empty">Nadie te debe. 🎉</td></tr>') +
-      '<tr class="tot"><td>Total</td><td class="r">' + P.length + '</td>' + tot.map((x) => '<td class="r">' + usd(x) + '</td>').join('') + '<td class="r">' + usd(T) + '</td><td></td></tr></tbody></table></div>' +
+      '<div class="card" style="margin-bottom:12px"><h3>Antigüedad de saldos por cliente</h3><table><thead><tr><th>Cliente</th><th class="r hm">Facturas</th>' + B.map((b) => '<th class="r hm">' + b[0] + '</th>').join('') + '<th class="r sm">Vencido</th><th class="r">Total</th><th class="hm"></th></tr></thead><tbody>' +
+      (Object.keys(por).length ? Object.entries(por).sort((a, b) => b[1].t - a[1].t).map(([k, o]) => '<tr><td class="wrap"><button class="lnk" style="text-align:left" onclick="X.estadoCuenta(\'' + k + '\')">' + esc(cliNom(k)) + '</button></td><td class="r hm">' + o.n + '</td>' + o.b.map((x, i) => '<td class="r hm" style="color:' + (x && i > 1 ? 'var(--bad)' : x && i ? 'var(--warn)' : 'inherit') + '">' + (x ? usd(x) : '—') + '</td>').join('') + '<td class="r sm" style="color:var(--bad)">' + (o.t - o.b[0] > 0.004 ? usd(o.t - o.b[0]) : '—') + '</td><td class="r"><b>' + usd(o.t) + '</b></td><td class="hm"><button class="lnk" onclick="X.estadoCuenta(\'' + k + '\')">Estado de cuenta</button></td></tr>').join('') : '<tr><td colspan="8" class="empty">Nadie te debe. 🎉</td></tr>') +
+      '<tr class="tot"><td>Total</td><td class="r hm">' + P.length + '</td>' + tot.map((x) => '<td class="r hm">' + usd(x) + '</td>').join('') + '<td class="r sm">' + usd(T - tot[0]) + '</td><td class="r">' + usd(T) + '</td><td class="hm"></td></tr></tbody></table></div>' +
       '<div class="card scroll"><h3>Facturas pendientes</h3>' + tablaDocs(P.slice().sort((a, b) => a.vence.localeCompare(b.vence)), 'v') + '</div>';
   };
 
@@ -349,10 +366,10 @@
     const sm = stockMap(); const L = S.productos.filter((p) => !iq || (p.nombre + ' ' + p.cod + ' ' + p.cat + ' ' + (p.barras || '')).toLowerCase().includes(iq.toLowerCase()));
     return '<h1>Inventario</h1><p class="sub">Existencia = inicial + compras − ventas ± ajustes. El costo es promedio ponderado y se actualiza con cada compra.</p>' +
       '<div class="row"><input class="inp" style="max-width:280px" id="iq" placeholder="Buscar…" value="' + esc(iq) + '"><span class="sp"></span><button class="btn sec" onclick="X.csvInv()">Descargar CSV</button><button class="btn" onclick="X.producto()">+ Nuevo producto</button></div>' +
-      '<div class="card scroll"><table><thead><tr><th>Código</th><th>Producto</th><th>IVA</th><th class="r">Exist.</th><th class="r">Mín.</th><th class="r">Costo $</th><th class="r">Precio $</th><th class="r">Margen</th><th class="r">Valor a costo</th><th>Estado</th><th></th></tr></thead><tbody>' +
-      (L.length ? L.map((p) => '<tr' + (p.activo ? '' : ' class="off"') + '><td>' + esc(p.cod) + '</td><td class="hint">' + esc(p.barras || '') + '</td><td>' + esc(p.nombre) + '</td><td>' + (p.exento ? 'Exento' : S.iva + '%') + '</td><td class="r">' + qty(sm[p.id]) + '</td><td class="r">' + qty(p.min) + '</td><td class="r">' + nf2.format(p.costo) + '</td><td class="r">' + nf2.format(p.precio) + '</td><td class="r">' + pct((p.precio - p.costo) / p.precio) + '</td><td class="r">' + usd(Math.max(0, sm[p.id]) * p.costo) + '</td><td>' + (sm[p.id] <= 0 ? '<span class="tag bad">Agotado</span>' : sm[p.id] <= p.min ? '<span class="tag warn">Reponer</span>' : '<span class="tag ok">OK</span>') + '</td>' +
-        '<td><button class="lnk" onclick="X.producto(\'' + p.id + '\')">Editar</button> · <button class="lnk" onclick="X.ajuste(\'' + p.id + '\')">Ajustar</button> · <button class="lnk" onclick="X.kardex(\'' + p.id + '\')">Movimientos</button></td></tr>').join('') : '<tr><td colspan="12" class="empty">Sin productos</td></tr>') +
-      '<tr class="tot"><td colspan="9">' + L.length + ' productos</td><td class="r">' + usd(L.reduce((a, p) => a + Math.max(0, sm[p.id]) * p.costo, 0)) + '</td><td colspan="2"></td></tr></tbody></table></div>';
+      '<div class="card scroll"><table><thead><tr><th>Producto</th><th class="r">Exist.</th><th class="r">Mín.</th><th class="r">Costo $</th><th class="r">Precio $</th><th class="r">Margen</th><th class="r">Valor a costo</th><th>Estado</th><th></th></tr></thead><tbody>' +
+      (L.length ? L.map((p) => '<tr' + (p.activo ? '' : ' class="off"') + '><td class="wrap"><button class="lnk" style="text-align:left" onclick="X.producto(\'' + p.id + '\')"><b>' + esc(p.nombre) + '</b></button><div class="hint">' + esc(p.cod) + (p.barras ? ' · ' + esc(p.barras) : '') + ' · ' + (p.exento ? 'Exento' : 'IVA ' + S.iva + '%') + '</div></td><td class="r">' + qty(sm[p.id]) + '</td><td class="r">' + qty(p.min) + '</td><td class="r">' + nf2.format(p.costo) + '</td><td class="r">' + nf2.format(p.precio) + '</td><td class="r">' + pct((p.precio - p.costo) / p.precio) + '</td><td class="r">' + usd(Math.max(0, sm[p.id]) * p.costo) + '</td><td>' + (sm[p.id] <= 0 ? '<span class="tag bad">Agotado</span>' : sm[p.id] <= p.min ? '<span class="tag warn">Reponer</span>' : '<span class="tag ok">OK</span>') + '</td>' +
+        '<td><button class="lnk" onclick="X.ajuste(\'' + p.id + '\')">Ajustar</button> · <button class="lnk" onclick="X.kardex(\'' + p.id + '\')">Movimientos</button></td></tr>').join('') : '<tr><td colspan="9" class="empty">Sin productos</td></tr>') +
+      '<tr class="tot"><td colspan="6">' + L.length + ' productos</td><td class="r">' + usd(L.reduce((a, p) => a + Math.max(0, sm[p.id]) * p.costo, 0)) + '</td><td colspan="2"></td></tr></tbody></table></div>';
   };
   A.inventario = () => { const q = $('iq'); q.oninput = () => { iq = q.value; const p = q.selectionStart; go(true); const n = $('iq'); n.focus(); n.setSelectionRange(p, p); }; };
 
@@ -407,11 +424,11 @@
     return '<div class="row" style="align-items:end"><div><h1>Costos y punto de equilibrio</h1><p class="sub" style="margin:0">Cuánto hay que vender para no perder, qué producto deja más y cuánto margen de seguridad tienes.</p></div><span class="sp"></span><label class="f">Período<select class="inp" onchange="X.per(this.value)">' + [[30, 'Últimos 30 días'], [60, 'Últimos 60 días'], [90, 'Últimos 90 días']].map((o) => '<option value="' + o[0] + '"' + (o[0] === per ? ' selected' : '') + '>' + o[1] + '</option>').join('') + '</select></label></div>' +
       '<div class="kpis">' + kpi(usd(a.ventas), 'Ventas sin IVA · ' + qty(a.und) + ' unidades') + kpi(pct(a.mcPct), 'Margen de contribución · ' + usd(a.mc), 'var(--ok)') + kpi(isFinite(a.pe) ? usd(a.pe) : '—', 'Punto de equilibrio del período · ' + (isFinite(a.peU) ? nf0.format(Math.ceil(a.peU)) + ' unidades' : '—'), 'var(--brand)') + kpi(pct(a.seg), 'Margen de seguridad: cuánto pueden caer las ventas antes de perder', a.seg < 0.1 ? 'var(--bad)' : 'var(--gold)') + '</div>' +
       '<div class="g2"><div class="card"><h3>Gráfico de equilibrio</h3>' + svg + '</div>' +
-      '<div class="card scroll"><h3>Cómo se calcula</h3><table><tbody><tr><td>Ventas (sin IVA)</td><td class="r">' + usd(a.ventas) + '</td></tr><tr><td>− Costo de la mercancía vendida</td><td class="r">' + usd(a.cv) + '</td></tr><tr><td>− Otros costos variables (' + qty(S.varPct) + '% de ventas)</td><td class="r">' + usd(a.varOtros) + '</td></tr>' +
+      '<div class="card"><h3>Cómo se calcula</h3><table class="calc"><tbody><tr><td>Ventas (sin IVA)</td><td class="r">' + usd(a.ventas) + '</td></tr><tr><td>− Costo de la mercancía vendida</td><td class="r">' + usd(a.cv) + '</td></tr><tr><td>− Otros costos variables (' + qty(S.varPct) + '% de ventas)</td><td class="r">' + usd(a.varOtros) + '</td></tr>' +
       '<tr class="tot"><td>= Margen de contribución</td><td class="r">' + usd(a.mc) + '</td></tr><tr><td>− Costos fijos del período (' + a.dias + ' días)</td><td class="r">' + usd(a.cf) + '</td></tr><tr class="tot"><td>= Utilidad operativa</td><td class="r" style="color:' + (a.util < 0 ? 'var(--bad)' : 'var(--ok)') + '">' + usd(a.util) + '</td></tr></tbody></table>' +
       '<p class="hint" style="margin-bottom:0">Punto de equilibrio = costos fijos ÷ % de margen de contribución = ' + usd(a.cf) + ' ÷ ' + pct(a.mcPct) + ' = <b>' + (isFinite(a.pe) ? usd(a.pe) : '—') + '</b>. En un mes: ' + (a.mcPct > 0 ? usd(cfM / a.mcPct) : '—') + '.</p></div></div>' +
-      '<div class="g2"><div class="card scroll"><h3>Margen de contribución por producto</h3><table><thead><tr><th>Producto</th><th class="r">Unid.</th><th class="r">Precio</th><th class="r">Costo var.</th><th class="r">MC unit.</th><th class="r">MC %</th><th class="r">Aporte total</th><th class="r">% de ventas</th></tr></thead><tbody>' +
-      (rows.length ? rows.map((r) => '<tr><td>' + esc(r.p?.nombre) + '</td><td class="r">' + qty(r.und) + '</td><td class="r">' + usd(r.pu) + '</td><td class="r">' + usd(r.cu) + '</td><td class="r">' + usd(r.mcu) + '</td><td class="r"><span class="tag ' + (r.mcp < 0.15 ? 'bad' : r.mcp < 0.22 ? 'warn' : 'ok') + '">' + pct(r.mcp) + '</span></td><td class="r"><b>' + usd(r.mc) + '</b></td><td class="r">' + pct(r.mix) + '</td></tr>').join('') : '<tr><td colspan="8" class="empty">Sin ventas en el período</td></tr>') + '</tbody></table><p class="hint">El aporte total es lo que cada producto deja para pagar los costos fijos y la ganancia. Un margen bajo con mucho volumen puede aportar más que uno alto que casi no se vende.</p></div>' +
+      '<div class="g2"><div class="card"><h3>Margen de contribución por producto</h3><table class="calc"><thead><tr><th>Producto</th><th class="r">MC %</th><th class="r">Aporte total</th></tr></thead><tbody>' +
+      (rows.length ? rows.map((r) => '<tr><td><b>' + esc(r.p?.nombre) + '</b><div class="hint">' + qty(r.und) + ' unid. · precio ' + usd(r.pu) + ' − costo ' + usd(r.cu) + ' = MC ' + usd(r.mcu) + '</div></td><td class="r"><span class="tag ' + (r.mcp < 0.15 ? 'bad' : r.mcp < 0.22 ? 'warn' : 'ok') + '">' + pct(r.mcp) + '</span></td><td class="r"><b>' + usd(r.mc) + '</b><div class="hint">' + pct(r.mix) + ' de ventas</div></td></tr>').join('') : '<tr><td colspan="3" class="empty">Sin ventas en el período</td></tr>') + '</tbody></table><p class="hint">El aporte total es lo que cada producto deja para pagar los costos fijos y la ganancia. Un margen bajo con mucho volumen puede aportar más que uno alto que casi no se vende.</p></div>' +
       '<div class="card"><h3>Costos fijos mensuales</h3><table style="table-layout:fixed"><colgroup><col><col style="width:110px"><col style="width:36px"></colgroup><tbody>' + S.fijos.map((f) => '<tr><td style="padding-left:0"><input class="inp" value="' + esc(f.nombre) + '" onchange="X.fijo(\'' + f.id + '\',\'nombre\',this.value)"></td><td class="r"><input class="inp num" style="width:100%;text-align:right" inputmode="decimal" value="' + f.monto + '" onchange="X.fijo(\'' + f.id + '\',\'monto\',this.value)"></td><td><button class="x" aria-label="Quitar" onclick="X.quitarFijo(\'' + f.id + '\')">×</button></td></tr>').join('') +
       '<tr class="tot"><td>Total al mes</td><td class="r">' + usd(cfM) + '</td><td></td></tr></tbody></table><div class="row" style="margin:10px 0 0"><button class="lnk" onclick="X.nuevoFijo()">+ Agregar costo fijo</button><span class="sp"></span><label class="f" style="flex-direction:row;display:flex;align-items:center;gap:6px">Otros variables %<input class="inp num" style="width:64px;text-align:right" inputmode="decimal" value="' + S.varPct + '" onchange="X.varPct(this.value)"></label></div><p class="hint" style="margin-bottom:0">Costos variables "otros": comisiones, empaques, delivery; se calculan como % de las ventas.</p></div></div>';
   };
@@ -428,10 +445,10 @@
   V.resultados = () => {
     erMes = erMes || hoy().slice(0, 7); const m = er(erMes), p = er(addMes(erMes, -1));
     const meses = [...new Set(S.ventas.map((v) => v.fecha.slice(0, 7)))].sort().reverse();
-    const fila = (t, x, y, base, b) => '<tr' + (b ? ' class="tot"' : '') + '><td>' + t + '</td><td class="r">' + usd(x) + '</td><td class="r hint">' + (base.a.ventas ? pct(x / base.a.ventas) : '') + '</td><td class="r">' + usd(y) + '</td><td class="r">' + (y ? '<span style="color:' + ((x - y) / Math.abs(y) >= 0 ? 'var(--ok)' : 'var(--bad)') + '">' + ((x - y) >= 0 ? '+' : '') + pct((x - y) / Math.abs(y)) + '</span>' : '') + '</td></tr>';
+    const fila = (t, x, y, base, b) => '<tr' + (b ? ' class="tot"' : '') + '><td class="wrap">' + t + '</td><td class="r">' + usd(x) + '</td><td class="r hint hm">' + (base.a.ventas ? pct(x / base.a.ventas) : '') + '</td><td class="r hm">' + usd(y) + '</td><td class="r">' + (y ? '<span style="color:' + ((x - y) / Math.abs(y) >= 0 ? 'var(--ok)' : 'var(--bad)') + '">' + ((x - y) >= 0 ? '+' : '') + pct((x - y) / Math.abs(y)) + '</span>' : '') + '</td></tr>';
     return '<div class="row" style="align-items:end"><div><h1>Estado de resultados</h1><p class="sub" style="margin:0">Ventas, costos y utilidad del mes, comparado con el mes anterior.' + (m.prop < 1 ? ' El mes en curso incluye costos fijos proporcionales a los días transcurridos.' : '') + '</p></div><span class="sp"></span><label class="f">Mes<select class="inp" onchange="X.erMes(this.value)">' + meses.map((x) => '<option value="' + x + '"' + (x === erMes ? ' selected' : '') + '>' + nomMes(x) + '</option>').join('') + '</select></label></div>' +
       '<div class="kpis">' + kpi(usd(m.a.ventas), 'Ventas netas') + kpi(usd(m.bruta), 'Utilidad bruta · ' + pct(m.a.ventas ? m.bruta / m.a.ventas : 0), 'var(--brand2)') + kpi(usd(m.op), 'Utilidad operativa · ' + pct(m.a.ventas ? m.op / m.a.ventas : 0), m.op < 0 ? 'var(--bad)' : 'var(--ok)') + kpi(usd(m.a.ventas ? m.a.ventas / Math.max(1, m.a.L.length) : 0), 'Venta promedio por factura', 'var(--gold)') + '</div>' +
-      '<div class="card scroll" style="max-width:820px"><table><thead><tr><th></th><th class="r">' + nomMes(m.ym) + '</th><th class="r">% ventas</th><th class="r">' + nomMes(p.ym) + '</th><th class="r">Variación</th></tr></thead><tbody>' +
+      '<div class="card" style="max-width:820px"><table class="calc"><thead><tr><th></th><th class="r">' + nomMes(m.ym) + '</th><th class="r hm">% ventas</th><th class="r hm">' + nomMes(p.ym) + '</th><th class="r">Variación</th></tr></thead><tbody>' +
       fila('Ventas netas (sin IVA)', m.a.ventas, p.a.ventas, m, true) + fila('− Costo de la mercancía vendida', m.a.cv, p.a.cv, m) + fila('= Utilidad bruta', m.bruta, p.bruta, m, true) + fila('− Otros costos variables', m.a.varOtros, p.a.varOtros, m) +
       fila('= Margen de contribución', m.a.mc, p.a.mc, m, true) + m.fijos.map((f, i) => fila('&nbsp;&nbsp;&nbsp;− ' + esc(f[0]), f[1], p.fijos[i][1], m)).join('') + fila('− Total costos fijos', m.cf, p.cf, m) + fila('= Utilidad operativa', m.op, p.op, m, true) + '</tbody></table></div>';
   };
@@ -439,7 +456,7 @@
   /* --- Simulador --- */
   let sim = { precio: 0, volumen: 0, costo: 0, fijos: 0 };
   V.simulador = () => '<h1>Simulador</h1><p class="sub">¿Qué pasa si…? Mueve los controles y mira cómo cambian la utilidad y el punto de equilibrio. Base: los últimos 30 días. No cambia tus datos.</p>' +
-    '<div class="g2"><div class="card"><h3>Supuestos</h3>' + [['precio', 'Precio de venta'], ['volumen', 'Unidades vendidas'], ['costo', 'Costo de la mercancía'], ['fijos', 'Costos fijos']].map((x) => '<label class="f" style="margin:10px 0">' + x[1] + ' <b id="l-' + x[0] + '"></b><input type="range" min="-30" max="30" step="1" value="' + sim[x[0]] + '" oninput="X.sim(\'' + x[0] + '\',this.value)" style="width:100%;accent-color:var(--acc)"></label>').join('') +
+    '<div class="g2 sim"><div class="card"><h3>Supuestos</h3>' + [['precio', 'Precio de venta'], ['volumen', 'Unidades vendidas'], ['costo', 'Costo de la mercancía'], ['fijos', 'Costos fijos']].map((x) => '<label class="f" style="margin:10px 0">' + x[1] + ' <b id="l-' + x[0] + '"></b><input type="range" min="-30" max="30" step="1" value="' + sim[x[0]] + '" oninput="X.sim(\'' + x[0] + '\',this.value)" style="width:100%;accent-color:var(--acc)"></label>').join('') +
     '<div class="row" style="margin:6px 0 0"><button class="btn sm sec" onclick="X.simReset()">Volver a cero</button><button class="btn sm sec" onclick="X.simPreset(1)">Subo precio 5% y vendo 3% menos</button><button class="btn sm sec" onclick="X.simPreset(2)">Proveedor sube 8%</button></div></div><div class="card" id="simres"></div></div>';
   A.simulador = () => pintarSim();
   function pintarSim() {
@@ -448,16 +465,16 @@
     const ventas = a.ventas * k.p * k.v, cv = a.cv * k.c * k.v, otros = ventas * S.varPct / 100, cf = a.cf * k.f, mc = ventas - cv - otros, mcp = ventas ? mc / ventas : 0, pe = mcp > 0 ? cf / mcp : Infinity, util = mc - cf;
     ['precio', 'volumen', 'costo', 'fijos'].forEach((x) => ($('l-' + x).textContent = (sim[x] > 0 ? '+' : '') + sim[x] + '%'));
     const d = (x, y, inv) => { const df = x - y; if (Math.abs(df) < 0.005) return ''; const bueno = inv ? df < 0 : df > 0; return '<div style="color:' + (bueno ? 'var(--ok)' : 'var(--bad)') + ';font-size:11px">' + (df > 0 ? '+' : '') + usd(df) + '</div>'; };
-    $('simres').innerHTML = '<h3>Resultado (30 días)</h3><div class="scroll"><table><thead><tr><th></th><th class="r">Hoy</th><th class="r">Con los cambios</th></tr></thead><tbody>' +
+    $('simres').innerHTML = '<h3>Resultado (30 días)</h3><div><table class="calc"><thead><tr><th></th><th class="r">Hoy</th><th class="r">Con los cambios</th></tr></thead><tbody>' +
       '<tr><td>Ventas</td><td class="r">' + usd(a.ventas) + '</td><td class="r">' + usd(ventas) + d(ventas, a.ventas) + '</td></tr><tr><td>Costos variables</td><td class="r">' + usd(a.cvt) + '</td><td class="r">' + usd(cv + otros) + d(cv + otros, a.cvt, 1) + '</td></tr>' +
       '<tr><td>Margen de contribución</td><td class="r">' + pct(a.mcPct) + '</td><td class="r">' + pct(mcp) + '</td></tr><tr><td>Costos fijos</td><td class="r">' + usd(a.cf) + '</td><td class="r">' + usd(cf) + d(cf, a.cf, 1) + '</td></tr>' +
       '<tr><td>Punto de equilibrio</td><td class="r">' + (isFinite(a.pe) ? usd(a.pe) : '—') + '</td><td class="r">' + (isFinite(pe) ? usd(pe) + d(pe, a.pe, 1) : '—') + '</td></tr><tr class="tot"><td>Utilidad operativa</td><td class="r">' + usd(a.util) + '</td><td class="r" style="color:' + (util < 0 ? 'var(--bad)' : 'inherit') + '">' + usd(util) + d(util, a.util) + '</td></tr></tbody></table></div>' +
       '<p style="margin:12px 0 0">' + (Math.abs(util - a.util) < 0.5 ? 'Mueve un control para ver el efecto.' : util > a.util ? 'Con estos cambios ganarías <b>' + usd(util - a.util) + '</b> más cada 30 días.' : 'Con estos cambios ganarías <b>' + usd(a.util - util) + '</b> menos cada 30 días.') + (sim.precio > 0 && a.mcPct > 0 ? ' Con un ' + sim.precio + '% más de precio podrías vender hasta <b>' + pct(1 - a.mcPct / (a.mcPct + sim.precio / 100 * (1))) + '</b> menos de unidades y ganar lo mismo.' : '') + '</p>';
   }
 
-  V.config = () => '<h1>Configuración</h1><p class="sub">Datos de la empresa, impuestos, tasa y respaldo.</p><div class="g2e"><div class="card"><h3>Empresa</h3><div class="form"><label class="f full">Razón social<input class="inp" id="ce" value="' + esc(S.empresa) + '"></label><label class="f">RIF<input class="inp" id="cr" value="' + esc(S.rif) + '"></label><label class="f">IVA %<input class="inp num" id="ci" inputmode="decimal" value="' + S.iva + '"></label><label class="f">Tasa (Bs por $)<input class="inp num" id="ct" inputmode="decimal" value="' + S.tasa + '"></label></div><div class="row" style="justify-content:flex-end;margin:12px 0 0"><button class="btn" onclick="X.guardarCfg()">Guardar</button></div></div>' +
+  V.config = () => '<h1>Configuración</h1><p class="sub">Datos de la empresa, impuestos, tasa y respaldo.</p><div class="g2e"><div class="card"><h3>Empresa</h3><div class="form"><label class="f full">Razón social<input class="inp" id="ce" value="' + esc(S.empresa) + '"></label><label class="f">RIF<input class="inp" id="cr" value="' + esc(S.rif) + '"></label><label class="f">IVA %<input class="inp num" id="ci" inputmode="decimal" value="' + S.iva + '"></label><label class="f bs">Tasa (Bs por $)<input class="inp num" id="ct" inputmode="decimal" value="' + S.tasa + '"></label></div><div class="row" style="justify-content:flex-end;margin:12px 0 0"><button class="btn" onclick="X.guardarCfg()">Guardar</button></div></div>' +
     '<div class="card"><h3>Respaldo</h3><p class="hint" style="margin-top:0">Tus datos viven solo en este navegador. Descarga un respaldo para pasarlos a otro equipo o guardarlos.</p><div class="row"><button class="btn sec" onclick="X.respaldo()">Descargar respaldo (.json)</button><label class="btn sec">Cargar respaldo<input type="file" accept=".json,application/json" hidden onchange="X.restaurar(this.files[0])"></label></div>' +
-    '<h3 style="margin-top:16px">Empezar de nuevo</h3><div class="row"><button class="btn sec" onclick="X.reset(\'demo\')">Volver a los datos de ejemplo</button><button class="btn danger" onclick="X.reset(\'vacio\')">Empezar en blanco</button></div></div></div>';
+    '<h3 style="margin-top:16px">Empezar de nuevo</h3><div class="row"><button class="btn sec" onclick="X.reset(\'demo\')">Volver a los datos ficticios</button><button class="btn danger" onclick="X.reset(\'vacio\')">Empezar en blanco</button></div></div></div>';
 
   /* ---------- acciones ---------- */
   const X = window.X = {
@@ -477,11 +494,11 @@
     kpago(p) { K.pago = p; K.recibido = ''; pintarK(); },
     kconfirmar() {
       const t = totK(); const enBs = K.pago === 'Efectivo Bs'; const rec = num(K.recibido); const tot = enBs ? t.total * S.tasa : t.total;
-      if (K.pago.startsWith('Efectivo') && isFinite(rec) && rec < tot - 0.004) return toast('El monto recibido no alcanza', true);
+      if (esEf(K.pago) && isFinite(rec) && rec < tot - 0.004) return toast('El monto recibido no alcanza', true);
       const sm = stockMap(); for (const x of K.items) if (x.cant > sm[x.pid]) return toast('Existencia insuficiente: ' + prod(x.pid).nombre, true);
       const v = armarVenta(S, { fecha: isoTime(new Date()), cli: '', cond: 'contado', dias: 0, tasa: S.tasa, items: K.items.map((x) => ({ pid: x.pid, cant: x.cant, precio: x.precio, costo: prod(x.pid).costo, exento: !!prod(x.pid).exento })) });
       v.caja = true; v.abonos.push({ id: uid(), fecha: hoy(), monto: v.total, pago: K.pago }); S.ventas.push(v); save();
-      const vuelto = isFinite(rec) && K.pago.startsWith('Efectivo') ? rec - tot : 0;
+      const vuelto = isFinite(rec) && esEf(K.pago) ? rec - tot : 0;
       K = { items: [], q: '', sel: 0, ult: null, pagando: false, pago: K.pago, recibido: '' }; go(true);
       toast('Venta ' + nfac(v.num) + ' lista' + (vuelto > 0.004 ? ' · vuelto ' + (enBs ? bs(vuelto) : usd(vuelto)) : ''));
     },
@@ -504,7 +521,7 @@
       dlg('Factura N° ' + nfac(v.num), '<div id="doc"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px"><div><b>' + esc(S.empresa) + '</b><div class="hint">RIF ' + esc(S.rif) + '</div></div><div style="text-align:right"><b>Factura ' + nfac(v.num) + '</b><div class="hint">' + fdia(v.fecha) + ' ' + fhora(v.fecha) + '</div></div></div>' +
         '<p style="margin:0 0 8px">Cliente: <b>' + esc(cliNom(v.cli)) + '</b>' + (c ? ' · RIF ' + esc(c.rif) : '') + '<br>Condición: ' + (v.cond === 'credito' ? 'Crédito, vence ' + fdia(v.vence) : 'Contado') + '</p>' +
         '<table><thead><tr><th>Producto</th><th class="r">Cant.</th><th class="r">Precio</th><th class="r">Total</th></tr></thead><tbody>' + v.items.map((x) => '<tr><td class="wrap">' + esc(prod(x.pid)?.nombre) + (x.exento ? ' (E)' : '') + '</td><td class="r">' + qty(x.cant) + '</td><td class="r">' + usd(x.precio) + '</td><td class="r">' + usd(x.cant * x.precio) + '</td></tr>').join('') +
-        '<tr><td colspan="3">Base imponible</td><td class="r">' + usd(v.grav) + '</td></tr><tr><td colspan="3">Exento</td><td class="r">' + usd(v.sub - v.grav) + '</td></tr><tr><td colspan="3">IVA ' + S.iva + '%</td><td class="r">' + usd(v.iva) + '</td></tr><tr class="tot"><td colspan="3">Total $</td><td class="r">' + usd(v.total) + '</td></tr><tr class="tot"><td colspan="3">Total Bs (tasa ' + nf2.format(v.tasa) + ')</td><td class="r">' + bs(v.total * v.tasa) + '</td></tr></tbody></table>' +
+        '<tr><td colspan="3">Base imponible</td><td class="r">' + usd(v.grav) + '</td></tr><tr><td colspan="3">Exento</td><td class="r">' + usd(v.sub - v.grav) + '</td></tr><tr><td colspan="3">IVA ' + S.iva + '%</td><td class="r">' + usd(v.iva) + '</td></tr><tr class="tot"><td colspan="3">Total $</td><td class="r">' + usd(v.total) + '</td></tr><tr class="tot bs"><td colspan="3">Total Bs (tasa ' + nf2.format(v.tasa) + ')</td><td class="r">' + bs(v.total * v.tasa) + '</td></tr></tbody></table>' +
         (v.abonos.length ? '<h3 style="margin-top:14px">Pagos</h3><table><tbody>' + v.abonos.map((a) => '<tr><td>' + fdia(a.fecha) + '</td><td>' + esc(a.pago) + '</td><td class="r">' + usd(a.monto) + '</td></tr>').join('') + '<tr class="tot"><td colspan="2">Saldo</td><td class="r">' + usd(saldo(v)) + '</td></tr></tbody></table>' : '') + (v.anulada ? '<p><b style="color:var(--bad)">FACTURA ANULADA</b></p>' : '') + '</div>',
         (!v.anulada && !v.abonos.length ? '<button class="btn danger" style="margin-right:auto" onclick="X.anular(\'' + id + '\')">Anular</button>' : '') + '<button class="btn sec" onclick="X.imprimir()">Imprimir</button>' + (!v.anulada && saldo(v) > 0 ? '<button class="btn" onclick="X.abonar(\'' + id + '\')">Registrar cobro</button>' : '<button class="btn" onclick="X.cerrar()">Listo</button>'), 620);
     },
@@ -589,7 +606,7 @@
       items.forEach((x) => { const p = prod(x.pid); const st = Math.max(0, sm[x.pid]); p.costo = r2((st * p.costo + x.cant * x.costo) / (st + x.cant)); sm[x.pid] = st + x.cant; });
       const pv = prov(B.prov); const tot = r2(items.reduce((a, x) => a + x.cant * x.costo, 0));
       const c = { id: uid(), num: S.seq.compra++, fecha: B.fecha + 'T' + isoTime(new Date()).slice(11), prov: B.prov, factura: B.factura.trim(), cond: B.cond, vence: addDays(B.fecha, B.cond === 'credito' ? pv.dias : 0), items, total: tot, pagos: [], anulada: false };
-      if (B.cond === 'contado') c.pagos.push({ id: uid(), fecha: B.fecha, monto: tot, pago: 'Transferencia' });
+      if (B.cond === 'contado') c.pagos.push({ id: uid(), fecha: B.fecha, monto: tot, pago: TRF });
       S.compras.push(c); save(); B = null; go(true); toast('Compra registrada: ' + usd(tot) + (c.cond === 'credito' ? ' · vence ' + fdia(c.vence) : ''));
     },
     verCompra(id) {
@@ -602,7 +619,7 @@
     anularCompra(id) { const c = S.compras.find((x) => x.id === id); const sm = stockMap(); const f = c.items.find((x) => sm[x.pid] - x.cant < 0); if (f) return toast('No se puede anular: ya se vendió parte de ' + prod(f.pid).nombre, true); c.anulada = true; save(); cerrar(); go(true); toast('Compra anulada'); },
     pagarCompra(id) {
       const c = S.compras.find((x) => x.id === id);
-      dlg('Pagar compra ' + String(c.num).padStart(4, '0'), '<p class="hint" style="margin-top:0">' + esc(prov(c.prov)?.nombre) + ' · saldo <b>' + usd(saldo(c)) + '</b> · vence ' + fdia(c.vence) + '</p><div class="form"><label class="f">Monto $<input class="inp num" id="am" inputmode="decimal" value="' + saldo(c) + '"></label><label class="f">Forma de pago<select class="inp" id="ap">' + PAGOS.map((p) => '<option' + (p === 'Transferencia' ? ' selected' : '') + '>' + p + '</option>').join('') + '</select></label><label class="f">Fecha<input type="date" class="inp" id="af" value="' + hoy() + '"></label></div>',
+      dlg('Pagar compra ' + String(c.num).padStart(4, '0'), '<p class="hint" style="margin-top:0">' + esc(prov(c.prov)?.nombre) + ' · saldo <b>' + usd(saldo(c)) + '</b> · vence ' + fdia(c.vence) + '</p><div class="form"><label class="f">Monto $<input class="inp num" id="am" inputmode="decimal" value="' + saldo(c) + '"></label><label class="f">Forma de pago<select class="inp" id="ap">' + PAGOS.map((p) => '<option' + (p === TRF ? ' selected' : '') + '>' + p + '</option>').join('') + '</select></label><label class="f">Fecha<input type="date" class="inp" id="af" value="' + hoy() + '"></label></div>',
         '<button class="btn sec" onclick="X.cerrar()">Cancelar</button><button class="btn" onclick="X.okPago(\'' + id + '\')">Registrar pago</button>');
     },
     okPago(id) { const c = S.compras.find((x) => x.id === id); const m = num($('am').value); if (!(m > 0)) return toast('Monto inválido', true); if (m > saldo(c) + 0.005) return toast('Mayor que el saldo', true); c.pagos.push({ id: uid(), fecha: $('af').value || hoy(), monto: r2(m), pago: $('ap').value }); save(); cerrar(); go(true); toast('Pago registrado'); },
@@ -620,8 +637,8 @@
     guardarCfg() { const t = num($('ct').value), i = num($('ci').value); if (!(t > 0)) return toast('Tasa inválida', true); if (!(i >= 0 && i < 100)) return toast('IVA inválido', true); S.empresa = $('ce').value.trim() || S.empresa; S.rif = $('cr').value.trim(); S.iva = r2(i); if (r2(t) !== S.tasa) { S.tasa = r2(t); S.tasaFecha = hoy(); } save(); go(true); toast('Guardado'); },
     respaldo() { bajar('x3-data-respaldo-' + hoy() + '.json', JSON.stringify(S, null, 1), 'application/json'); },
     restaurar(f) { if (!f) return; const r = new FileReader(); r.onload = () => { try { const d = JSON.parse(r.result); if (d.v !== 1 || !Array.isArray(d.productos) || !Array.isArray(d.clientes) || !Array.isArray(d.fijos)) throw 0; S = d; save(); go(); toast('Respaldo cargado'); } catch (e) { toast('Ese archivo no es un respaldo de X3 DATA', true); } }; r.readAsText(f); },
-    reset(modo) { dlg(modo === 'demo' ? 'Volver a los datos de ejemplo' : 'Empezar en blanco', '<p>' + (modo === 'demo' ? 'Se borra lo que registraste y se cargan los datos de ejemplo.' : 'Se borra todo y queda el sistema vacío para cargar tu empresa: productos, clientes, proveedores y costos fijos.') + ' Si quieres conservar algo, descarga un respaldo antes.</p>', '<button class="btn sec" onclick="X.cerrar()">Cancelar</button><button class="btn danger" onclick="X.okReset(\'' + modo + '\')">Sí, continuar</button>'); },
-    okReset(modo) { S = modo === 'demo' ? seed() : blank(); save(); F = { items: [], cli: '', cond: 'contado', pago: 'Transferencia', q: '' }; B = null; cerrar(); location.hash = modo === 'demo' ? 'panel' : 'inventario'; go(); toast(modo === 'demo' ? 'Datos de ejemplo cargados' : 'Sistema vacío. Empieza por tus productos y costos fijos'); }
+    reset(modo) { dlg(modo === 'demo' ? 'Volver a los datos ficticios' : 'Empezar en blanco', '<p>' + (modo === 'demo' ? 'Se borra lo que registraste y se cargan los datos ficticios.' : 'Se borra todo y queda el sistema vacío para cargar tu empresa: productos, clientes, proveedores y costos fijos.') + ' Si quieres conservar algo, descarga un respaldo antes.</p>', '<button class="btn sec" onclick="X.cerrar()">Cancelar</button><button class="btn danger" onclick="X.okReset(\'' + modo + '\')">Sí, continuar</button>'); },
+    okReset(modo) { S = modo === 'demo' ? seed() : blank(); save(); F = { items: [], cli: '', cond: 'contado', pago: TRF, q: '' }; B = null; cerrar(); location.hash = modo === 'demo' ? 'panel' : 'inventario'; go(); toast(modo === 'demo' ? 'Datos ficticios cargados' : 'Sistema vacío. Empieza por tus productos y costos fijos'); }
   };
   function calcAj(m, n, st) { if (!isFinite(n)) return NaN; if (m === 'Conteo físico') return n - st; if (m === 'Corrección') return n; return -Math.abs(n); }
   function csv(rows) { return '﻿' + rows.map((r) => r.map((c) => { const s = String(c ?? ''); return /[";\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }).join(';')).join('\r\n'); }

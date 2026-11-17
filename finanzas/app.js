@@ -1,9 +1,9 @@
 /* Finanzas personales · PRB Consulting
    Ingresos, gastos, cuentas en $ y Bs, presupuesto por categoría y metas de ahorro.
-   Todo se guarda en el navegador del visitante (localStorage). Datos de ejemplo inventados. */
+   Todo se guarda en el navegador del visitante (localStorage). Datos ficticios. */
 (function () {
   'use strict';
-  const KEY = 'prb-finanzas-v1';
+  const KEY = 'prb-finanzas-v1' + PRB.sfx; const EN = PRB.en;
 
   /* ---------- utilidades ---------- */
   const $ = (id) => document.getElementById(id);
@@ -15,13 +15,13 @@
   const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
   const nomMes = (ym) => MESES[+ym.slice(5, 7) - 1] + ' ' + ym.slice(0, 4);
   const corto = (ym) => MESES[+ym.slice(5, 7) - 1].slice(0, 3);
-  const fdia = (iso) => iso ? iso.slice(8, 10) + '/' + iso.slice(5, 7) + '/' + iso.slice(0, 4) : '';
-  const nf2 = new Intl.NumberFormat('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fdia = PRB.fecha;
+  const nf2 = new Intl.NumberFormat(PRB.loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const r2 = (v) => Math.round((+v + Number.EPSILON) * 100) / 100;
   const usd = (v) => (v < 0 ? '−$' : '$') + nf2.format(Math.abs(r2(v)));
   const bs = (v) => (v < 0 ? '−Bs ' : 'Bs ') + nf2.format(Math.abs(r2(v)));
   const mon = (v, m) => (m === 'VES' ? bs(v) : usd(v));
-  const num = (v) => { let s = String(v ?? '').trim(); if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.'); const x = parseFloat(s); return isFinite(x) ? x : NaN; };
+  const num = PRB.num;
   const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const PAL = ['#2e9e6b', '#e0a54a', '#4f6bd8', '#c2410c', '#7c3aed', '#0e7490', '#be185d', '#65a30d', '#64748b', '#a16207', '#0f766e', '#9333ea'];
@@ -33,6 +33,10 @@
   function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { toast('No se pudo guardar en este navegador', true); } }
   function load() { try { const r = localStorage.getItem(KEY); if (r) { S = JSON.parse(r); if (S && S.v === 1) return; } } catch (e) { /* sin almacenamiento */ } S = seed(); save(); }
   function blank() {
+    if (EN) return { v: 1, nombre: 'Mis finanzas', tasa: 1,
+      cuentas: [{ id: 'c1', nombre: 'Cash', moneda: 'USD', inicial: 0 }, { id: 'c2', nombre: PRB.region === 'CA' ? 'Chequing' : 'Checking', moneda: 'USD', inicial: 0 }],
+      cats: { gasto: ['Groceries', 'Transportation', 'Housing', 'Utilities', 'Health', 'Education', 'Entertainment', 'Clothing', 'Family', 'Other spending'], ingreso: ['Salary', 'Side jobs', 'Sales', 'Other income'] },
+      movs: [], presup: {}, metas: [] };
     return { v: 1, nombre: 'Mis finanzas', tasa: 52.4,
       cuentas: [{ id: 'c1', nombre: 'Efectivo $', moneda: 'USD', inicial: 0 }, { id: 'c2', nombre: 'Banco en Bs', moneda: 'VES', inicial: 0 }],
       cats: { gasto: ['Comida', 'Transporte', 'Vivienda', 'Servicios', 'Salud', 'Educación', 'Entretenimiento', 'Ropa', 'Familia', 'Otros gastos'], ingreso: ['Sueldo', 'Trabajos extra', 'Ventas', 'Otros ingresos'] },
@@ -53,6 +57,7 @@
       ['Familia', 'c3', [15, 40], 0.05, ['Ayuda a mamá', 'Regalo de cumpleaños']],
       ['Otros gastos', 'c1', [2, 12], 0.06, ['Varios', 'Peluquería']]
     ];
+    if (EN) return seedEN(st, rnd, t0);
     for (let k = 190; k >= 0; k--) {
       const d = addDays(t0, -k); tasa = r2(tasa + 0.05); const dd = +d.slice(8);
       const push = (m) => st.movs.push(Object.assign({ id: uid(), fecha: d, tasa }, m));
@@ -71,6 +76,42 @@
       { id: uid(), nombre: 'Fondo de emergencia (3 meses)', objetivo: 3000, limite: addDays(t0, 300), aportes: [[addDays(t0, -120), 400], [addDays(t0, -90), 250], [addDays(t0, -60), 250], [addDays(t0, -30), 250]] },
       { id: uid(), nombre: 'Certificación profesional', objetivo: 450, limite: addDays(t0, 75), aportes: [[addDays(t0, -70), 150], [addDays(t0, -40), 100]] },
       { id: uid(), nombre: 'Viaje de vacaciones', objetivo: 1200, limite: addDays(t0, 240), aportes: [[addDays(t0, -20), 180]] }
+    ];
+    return st;
+  }
+
+  function seedEN(st, rnd, t0) {
+    st.nombre = 'Sample finances'; st.tasa = 1;
+    st.cats = { gasto: ['Groceries', 'Transportation', 'Housing', 'Utilities', 'Health', 'Education', 'Entertainment', 'Clothing', 'Family', 'Other spending'], ingreso: ['Salary', 'Side jobs', 'Sales', 'Other income'] };
+    st.cuentas = [{ id: 'c1', nombre: 'Cash', moneda: 'USD', inicial: 80 }, { id: 'c2', nombre: PRB.region === 'CA' ? 'Chequing' : 'Checking', moneda: 'USD', inicial: 1450 }, { id: 'c3', nombre: 'Savings', moneda: 'USD', inicial: 900 }, { id: 'c4', nombre: 'Credit card', moneda: 'USD', inicial: 0 }];
+    st.presup = { 'Groceries': 650, 'Transportation': 260, 'Housing': 1650, 'Utilities': 230, 'Health': 80, 'Education': 60, 'Entertainment': 150, 'Clothing': 90, 'Family': 120, 'Other spending': 80 };
+    const G = [
+      ['Groceries', 'c4', [18, 95], 0.4, ['Groceries', 'Bakery', 'Farmers market', 'Lunch']],
+      ['Transportation', 'c4', [8, 60], 0.25, ['Gas', 'Transit pass top-up', 'Parking']],
+      ['Entertainment', 'c4', [12, 55], 0.08, ['Movies', 'Dinner out', 'Streaming']],
+      ['Health', 'c2', [10, 45], 0.04, ['Pharmacy', 'Dental co-pay']],
+      ['Clothing', 'c4', [25, 80], 0.03, ['Shoes', 'Clothes']],
+      ['Family', 'c2', [20, 60], 0.04, ['Birthday gift', 'Kids activities']],
+      ['Other spending', 'c1', [4, 25], 0.06, ['Haircut', 'Coffee', 'Misc.']]
+    ];
+    for (let k = 190; k >= 0; k--) {
+      const d = addDays(t0, -k); const dd = +d.slice(8);
+      const push = (m) => st.movs.push(Object.assign({ id: uid(), fecha: d, tasa: 1 }, m));
+      if (dd === 1 || dd === 15) push({ tipo: 'ingreso', cuenta: 'c2', monto: 2150, cat: 'Salary', nota: 'Paycheque' });
+      if (dd === 1) push({ tipo: 'gasto', cuenta: 'c2', monto: 1650, cat: 'Housing', nota: 'Rent' });
+      if (dd === 2) push({ tipo: 'transf', cuenta: 'c2', cuentaDest: 'c3', monto: 300, montoDest: 300, nota: 'Monthly savings' });
+      if (dd === 5) { push({ tipo: 'gasto', cuenta: 'c2', monto: r2(140 + rnd() * 40), cat: 'Utilities', nota: 'Hydro, water and internet' }); push({ tipo: 'gasto', cuenta: 'c4', monto: 39, cat: 'Education', nota: 'Online course' }); }
+      if (dd === 10) push({ tipo: 'gasto', cuenta: 'c2', monto: 55, cat: 'Utilities', nota: 'Phone plan' });
+      if (dd === 12) push({ tipo: 'transf', cuenta: 'c2', cuentaDest: 'c1', monto: 100, montoDest: 100, nota: 'ATM withdrawal' });
+      if (dd === 18 && rnd() < 0.7) push({ tipo: 'ingreso', cuenta: 'c2', monto: r2(150 + rnd() * 250), cat: 'Side jobs', nota: 'Freelance project' });
+      if (dd === 22 && rnd() < 0.4) push({ tipo: 'ingreso', cuenta: 'c1', monto: r2(20 + rnd() * 60), cat: 'Sales', nota: 'Sold used items' });
+      if (dd === 25) push({ tipo: 'transf', cuenta: 'c2', cuentaDest: 'c4', monto: 900, montoDest: 900, nota: 'Credit card payment' });
+      G.forEach((g) => { if (rnd() < g[3]) push({ tipo: 'gasto', cuenta: g[1], monto: r2(g[2][0] + rnd() * (g[2][1] - g[2][0])), cat: g[0], nota: g[4][Math.floor(rnd() * g[4].length)] }); });
+    }
+    st.metas = [
+      { id: uid(), nombre: 'Emergency fund (3 months)', objetivo: 9000, limite: addDays(t0, 330), aportes: [[addDays(t0, -120), 1200], [addDays(t0, -90), 600], [addDays(t0, -60), 600], [addDays(t0, -30), 600]] },
+      { id: uid(), nombre: 'Professional certification', objetivo: 900, limite: addDays(t0, 90), aportes: [[addDays(t0, -70), 300], [addDays(t0, -40), 200]] },
+      { id: uid(), nombre: 'Summer vacation', objetivo: 3000, limite: addDays(t0, 240), aportes: [[addDays(t0, -20), 400]] }
     ];
     return st;
   }
@@ -98,11 +139,11 @@
   function nav() {
     $('nav').innerHTML = '<div class="brand">Finanzas<small>Ingresos, gastos y ahorro</small></div>' +
       NAV.map((g) => '<div class="grp">' + g[0] + '</div>' + g[1].map((x) => '<button' + (x[0] === vista ? ' class="on"' : '') + ' onclick="location.hash=\'' + x[0] + '\'">' + x[1] + '</button>').join('')).join('') +
-      '<div class="tasa">Tasa para convertir<b>' + bs(S.tasa) + ' por $</b><button class="lnk" style="color:#cfe8da;margin-top:4px" onclick="F.tasa()">Cambiar tasa</button></div>';
+      (EN ? '' : '<div class="tasa">Tasa para convertir<b>' + bs(S.tasa) + ' por $</b><button class="lnk" style="color:#cfe8da;margin-top:4px" onclick="F.tasa()">Cambiar tasa</button></div>');
   }
   function go() {
     const k = location.hash.slice(1); vista = V[k] ? k : 'resumen'; nav();
-    $('m').innerHTML = V[vista]() + '<div class="foot">Finanzas personales · hecho por <a href="../">PRB Consulting</a>. Demo con datos inventados: lo que registres se guarda solo en este navegador. Puedes volver a los datos de ejemplo en Configuración.</div><button class="fab" onclick="F.mov()">+ Movimiento</button>';
+    $('m').innerHTML = V[vista]() + '<div class="foot">Finanzas personales · hecho por <a href="../">PRB Consulting</a>. Demo con datos ficticios: lo que registres se guarda solo en este navegador. Puedes volver a los datos ficticios en Configuración.</div><button class="fab" onclick="F.mov()">+ Movimiento</button>';
     if (A[vista]) A[vista](); window.scrollTo(0, 0);
   }
   window.addEventListener('hashchange', go);
@@ -122,7 +163,7 @@
     const mx = Math.max(1, ...meses.map((x) => Math.max(x[1].ing, x[1].gas)));
     const pres = Object.entries(S.presup).filter((x) => x[1] > 0); const pasados = pres.filter((x) => (r.porCat[x[0]] || 0) > x[1]);
     const tot = r.gas || 1;
-    return '<div class="row" style="align-items:end"><div><h1>Resumen de ' + nomMes(mes) + '</h1><p class="sub" style="margin:0">Todo convertido a dólares. Los movimientos en Bs usan la tasa del día en que se hicieron.</p></div><span class="sp"></span>' + selMes() + '<button class="btn" onclick="F.mov()">+ Movimiento</button></div>' +
+    return '<div class="row" style="align-items:end"><div><h1>Resumen de ' + nomMes(mes) + '</h1><p class="sub" style="margin:0">' + (EN ? 'Everything in one view for the selected month.' : 'Todo convertido a dólares. Los movimientos en Bs usan la tasa del día en que se hicieron.') + '</p></div><span class="sp"></span>' + selMes() + '<button class="btn" onclick="F.mov()">+ Movimiento</button></div>' +
       '<div class="kpis"><div class="card kpi" style="--c:var(--ok)"><div class="n">' + usd(r.ing) + '</div><div class="t">Ingresos del mes</div></div><div class="card kpi" style="--c:var(--bad)"><div class="n">' + usd(r.gas) + '</div><div class="t">Gastos del mes</div></div>' +
       '<div class="card kpi"><div class="n" style="color:' + (r.aho < 0 ? 'var(--bad)' : 'inherit') + '">' + usd(r.aho) + '</div><div class="t">' + (r.aho < 0 ? 'Gastaste más de lo que entró' : 'Ahorro del mes · ' + (r.ing ? Math.round(r.aho / r.ing * 100) : 0) + '% de lo que entró') + '</div></div>' +
       '<div class="card kpi" style="--c:var(--gold)"><div class="n">' + usd(total) + '</div><div class="t">Dinero total hoy en ' + S.cuentas.length + ' cuentas</div></div></div>' +
@@ -162,9 +203,9 @@
     const sal = saldos(); const tot = S.cuentas.reduce((a, c) => a + (c.moneda === 'VES' ? sal[c.id] / S.tasa : sal[c.id]), 0);
     return '<h1>Cuentas</h1><p class="sub">Dónde está tu dinero. El saldo se calcula solo: saldo inicial + ingresos − gastos ± cambios entre cuentas.</p>' +
       '<div class="row"><span class="sp"></span><button class="btn sec" onclick="F.transf()">Pasar dinero entre cuentas</button><button class="btn" onclick="F.cuenta()">+ Nueva cuenta</button></div>' +
-      '<div class="card scroll"><table><thead><tr><th>Cuenta</th><th>Moneda</th><th class="r">Saldo inicial</th><th class="r">Saldo hoy</th><th class="r">En $</th><th class="r">Movimientos</th><th></th></tr></thead><tbody>' +
-      S.cuentas.map((c) => '<tr><td><b>' + esc(c.nombre) + '</b></td><td>' + (c.moneda === 'VES' ? 'Bolívares' : 'Dólares') + '</td><td class="r">' + mon(c.inicial, c.moneda) + '</td><td class="r"><b style="color:' + (sal[c.id] < 0 ? 'var(--bad)' : 'inherit') + '">' + mon(sal[c.id], c.moneda) + '</b></td><td class="r">' + usd(c.moneda === 'VES' ? sal[c.id] / S.tasa : sal[c.id]) + '</td><td class="r">' + S.movs.filter((m) => m.cuenta === c.id || m.cuentaDest === c.id).length + '</td><td><button class="lnk" onclick="F.cuenta(\'' + c.id + '\')">Editar</button></td></tr>').join('') +
-      '<tr class="tot"><td colspan="4">Total (Bs convertidos a la tasa de hoy)</td><td class="r">' + usd(tot) + '</td><td colspan="2"></td></tr></tbody></table></div>';
+      '<div class="card"><table><thead><tr><th>Cuenta</th><th class="bs hm">Moneda</th><th class="r hm">Saldo inicial</th><th class="r">Saldo hoy</th><th class="r bs hm">En $</th><th class="r hm">Movimientos</th><th></th></tr></thead><tbody>' +
+      S.cuentas.map((c) => '<tr><td class="wrap"><b>' + esc(c.nombre) + '</b></td><td class="bs hm">' + (c.moneda === 'VES' ? 'Bolívares' : 'Dólares') + '</td><td class="r hm">' + mon(c.inicial, c.moneda) + '</td><td class="r"><b style="color:' + (sal[c.id] < 0 ? 'var(--bad)' : 'inherit') + '">' + mon(sal[c.id], c.moneda) + '</b></td><td class="r bs hm">' + usd(c.moneda === 'VES' ? sal[c.id] / S.tasa : sal[c.id]) + '</td><td class="r hm">' + S.movs.filter((m) => m.cuenta === c.id || m.cuentaDest === c.id).length + '</td><td><button class="lnk" onclick="F.cuenta(\'' + c.id + '\')">Editar</button></td></tr>').join('') +
+      '<tr class="tot"><td>' + (EN ? 'Total' : 'Total (Bs a la tasa de hoy)') + '</td><td class="bs hm"></td><td class="hm"></td><td class="r">' + usd(tot) + '</td><td class="r bs hm"></td><td class="hm"></td><td></td></tr></tbody></table></div>';
   };
 
   V.presupuesto = () => {
@@ -174,9 +215,9 @@
     return '<div class="row" style="align-items:end"><div><h1>Presupuesto</h1><p class="sub" style="margin:0">Cuánto quieres gastar por categoría cada mes, y cómo vas. Escribe el tope y se guarda solo.</p></div><span class="sp"></span>' + selMes() + '</div>' +
       '<div class="kpis"><div class="card kpi"><div class="n">' + usd(tp) + '</div><div class="t">Presupuesto del mes</div></div><div class="card kpi" style="--c:var(--bad)"><div class="n">' + usd(tg) + '</div><div class="t">Gastado · ' + (tp ? Math.round(tg / tp * 100) : 0) + '%</div></div>' +
       '<div class="card kpi" style="--c:var(--ok)"><div class="n">' + usd(tp - tg) + '</div><div class="t">' + (tp - tg >= 0 ? 'Te queda' : 'Te pasaste') + '</div></div><div class="card kpi" style="--c:var(--gold)"><div class="n">' + Math.round(dia / dMes * 100) + '%</div><div class="t">Del mes transcurrido (día ' + dia + ' de ' + dMes + ')</div></div></div>' +
-      '<div class="card scroll"><table><thead><tr><th>Categoría</th><th class="r">Tope mensual $</th><th class="r">Gastado</th><th style="min-width:180px">Avance</th><th class="r">Disponible</th><th></th></tr></thead><tbody>' +
+      '<div class="card"><table><thead><tr><th>Categoría</th><th class="r">Tope mensual $</th><th class="r hm">Gastado</th><th style="min-width:120px">Avance</th><th class="r hm">Disponible</th><th class="hm"></th></tr></thead><tbody>' +
       P.map((x) => { const p = x[1] ? x[2] / x[1] : 0; const col = p > 1 ? 'var(--bad)' : p > dia / dMes + 0.1 ? '#d39a2c' : 'var(--ok)';
-        return '<tr><td>' + esc(x[0]) + '</td><td class="r"><input class="inp num" style="width:100px;text-align:right" inputmode="decimal" value="' + (x[1] || '') + '" placeholder="0" onchange="F.presup(\'' + esc(x[0]).replace(/'/g, "\\'") + '\',this.value)"></td><td class="r">' + usd(x[2]) + '</td><td><div class="hb" style="margin:0"><span class="b"><i style="width:' + Math.min(100, p * 100) + '%;background:' + col + '"></i></span><span class="v" style="width:44px">' + (x[1] ? Math.round(p * 100) + '%' : '') + '</span></div></td><td class="r" style="color:' + (x[1] - x[2] < 0 ? 'var(--bad)' : 'inherit') + '">' + (x[1] ? usd(x[1] - x[2]) : '—') + '</td><td>' + (!x[1] ? '' : p > 1 ? '<span class="tag bad">Pasado</span>' : p > dia / dMes + 0.1 ? '<span class="tag warn">Va rápido</span>' : '<span class="tag ok">Bien</span>') + '</td></tr>'; }).join('') +
+        return '<tr><td class="wrap">' + esc(x[0]) + '</td><td class="r"><input class="inp num" style="width:84px;text-align:right" inputmode="decimal" value="' + (x[1] || '') + '" placeholder="0" onchange="F.presup(\'' + esc(x[0]).replace(/'/g, "\\'") + '\',this.value)"></td><td class="r hm">' + usd(x[2]) + '</td><td><div class="hb" style="margin:0"><span class="b"><i style="width:' + Math.min(100, p * 100) + '%;background:' + col + '"></i></span><span class="v" style="width:44px">' + (x[1] ? Math.round(p * 100) + '%' : '') + '</span></div></td><td class="r hm" style="color:' + (x[1] - x[2] < 0 ? 'var(--bad)' : 'inherit') + '">' + (x[1] ? usd(x[1] - x[2]) : '—') + '</td><td class="hm">' + (!x[1] ? '' : p > 1 ? '<span class="tag bad">Pasado</span>' : p > dia / dMes + 0.1 ? '<span class="tag warn">Va rápido</span>' : '<span class="tag ok">Bien</span>') + '</td></tr>'; }).join('') +
       '</tbody></table><p class="hint">"Va rápido" significa que gastaste más de lo que corresponde a los días que van del mes.</p></div>';
   };
 
@@ -190,11 +231,11 @@
         '<p class="hint" style="margin:6px 0 12px">' + (p >= 1 ? '¡Meta cumplida!' : 'Faltan ' + usd(falta) + (m.limite ? ' para el ' + fdia(m.limite) + ': guarda <b>' + usd(falta / meses) + '</b> al mes (' + meses + ' meses).' : '.')) + '</p>' +
         '<div class="row" style="margin:0"><button class="btn sm" onclick="F.aporte(\'' + m.id + '\')">+ Aportar</button><button class="btn sm sec" onclick="F.verAportes(\'' + m.id + '\')">Ver aportes (' + m.aportes.length + ')</button></div></div>'; }).join('') + '</div>' : '<div class="card empty">Aún no tienes metas. Crea la primera: un fondo de emergencia de 3 meses de gastos es un buen comienzo.</div>');
 
-  V.config = () => '<h1>Configuración</h1><p class="sub">Categorías, tasa y respaldo.</p><div class="g2e"><div class="card"><h3>General</h3><div class="form"><label class="f full">Nombre<input class="inp" id="cn" value="' + esc(S.nombre) + '"></label><label class="f">Tasa (Bs por $)<input class="inp num" id="ct" inputmode="decimal" value="' + S.tasa + '"></label></div>' +
+  V.config = () => '<h1>Configuración</h1><p class="sub">Categorías, tasa y respaldo.</p><div class="g2e"><div class="card"><h3>General</h3><div class="form"><label class="f full">Nombre<input class="inp" id="cn" value="' + esc(S.nombre) + '"></label><label class="f bs">Tasa (Bs por $)<input class="inp num" id="ct" inputmode="decimal" value="' + S.tasa + '"></label></div>' +
     '<label class="f" style="margin-top:10px">Categorías de gasto (una por línea)<textarea class="inp" id="cg" rows="6">' + esc(S.cats.gasto.join('\n')) + '</textarea></label><label class="f" style="margin-top:10px">Categorías de ingreso<textarea class="inp" id="ci" rows="4">' + esc(S.cats.ingreso.join('\n')) + '</textarea></label>' +
     '<div class="row" style="justify-content:flex-end;margin:12px 0 0"><button class="btn" onclick="F.guardarCfg()">Guardar</button></div></div>' +
     '<div class="card"><h3>Respaldo</h3><p class="hint" style="margin-top:0">Tus datos viven solo en este navegador. Descarga un respaldo para pasarlos a otro equipo.</p><div class="row"><button class="btn sec" onclick="F.respaldo()">Descargar respaldo (.json)</button><label class="btn sec">Cargar respaldo<input type="file" accept=".json,application/json" hidden onchange="F.restaurar(this.files[0])"></label></div>' +
-    '<h3 style="margin-top:16px">Empezar de nuevo</h3><div class="row"><button class="btn sec" onclick="F.reset(\'demo\')">Volver a los datos de ejemplo</button><button class="btn danger" onclick="F.reset(\'vacio\')">Empezar en blanco</button></div></div></div>';
+    '<h3 style="margin-top:16px">Empezar de nuevo</h3><div class="row"><button class="btn sec" onclick="F.reset(\'demo\')">Volver a los datos ficticios</button><button class="btn danger" onclick="F.reset(\'vacio\')">Empezar en blanco</button></div></div></div>';
 
   /* ---------- acciones ---------- */
   const F = window.F = {
@@ -210,7 +251,7 @@
       const opt = (t) => S.cats[t].map((c) => '<option' + (c === m.cat ? ' selected' : '') + '>' + esc(c) + '</option>').join('');
       dlg(id ? 'Editar movimiento' : 'Nuevo movimiento',
         '<div class="row" style="margin-bottom:12px" id="tp">' + ['gasto', 'ingreso'].map((t) => '<button class="btn ' + (m.tipo === t ? '' : 'sec') + '" data-t="' + t + '">' + (t === 'gasto' ? 'Gasto' : 'Ingreso') + '</button>').join('') + '<button class="btn sec" onclick="F.cerrar();F.transf()">Entre cuentas</button></div>' +
-        '<div class="form"><label class="f">Monto<input class="inp num" id="mm" inputmode="decimal" value="' + (m.monto || '') + '" placeholder="0,00"></label><label class="f">Cuenta<select class="inp" id="mc">' + S.cuentas.map((c) => '<option value="' + c.id + '"' + (c.id === m.cuenta ? ' selected' : '') + '>' + esc(c.nombre) + ' (' + (c.moneda === 'VES' ? 'Bs' : '$') + ')</option>').join('') + '</select></label>' +
+        '<div class="form"><label class="f">Monto<input class="inp num" id="mm" inputmode="decimal" value="' + (m.monto || '') + '" placeholder="' + (EN ? '0.00' : '0,00') + '"></label><label class="f">Cuenta<select class="inp" id="mc">' + S.cuentas.map((c) => '<option value="' + c.id + '"' + (c.id === m.cuenta ? ' selected' : '') + '>' + esc(c.nombre) + ' (' + (c.moneda === 'VES' ? 'Bs' : '$') + ')</option>').join('') + '</select></label>' +
         '<label class="f">Categoría<select class="inp" id="mk">' + opt(m.tipo) + '</select></label><label class="f">Fecha<input type="date" class="inp" id="mf" value="' + m.fecha + '"></label><label class="f full">Nota<input class="inp" id="mn" value="' + esc(m.nota) + '" placeholder="Ej.: mercado del sábado"></label><div class="full hint" id="mx"></div></div>',
         (id ? '<button class="btn danger" onclick="F.borrar(\'' + id + '\')" style="margin-right:auto">Borrar</button>' : '') + '<button class="btn sec" onclick="F.cerrar()">Cancelar</button><button class="btn" onclick="F.guardarMov(' + (id ? '\'' + id + '\'' : '') + ')">Guardar</button>');
       let tipo = m.tipo;
@@ -235,7 +276,7 @@
         '<label class="f">Monto que sale<input class="inp num" id="tm" inputmode="decimal" value="' + (m.monto || '') + '"></label><label class="f">Monto que entra<input class="inp num" id="tn" inputmode="decimal" value="' + (m.montoDest || '') + '"></label>' +
         '<label class="f">Fecha<input type="date" class="inp" id="tf" value="' + m.fecha + '"></label><label class="f">Nota<input class="inp" id="tx" value="' + esc(m.nota) + '" placeholder="Ej.: cambio a bolívares"></label><div class="full hint">Si las monedas son distintas, el monto que entra se calcula con la tasa del día; puedes corregirlo si te cambiaron a otra tasa.</div></div>',
         (id ? '<button class="btn danger" onclick="F.borrar(\'' + id + '\')" style="margin-right:auto">Borrar</button>' : '') + '<button class="btn sec" onclick="F.cerrar()">Cancelar</button><button class="btn" onclick="F.guardarTransf(' + (id ? '\'' + id + '\'' : '') + ')">Guardar</button>');
-      const calc = () => { const a = cuenta($('to').value), b = cuenta($('td').value); const v = num($('tm').value); if (!(v > 0)) return; $('tn').value = String(r2(a.moneda === b.moneda ? v : a.moneda === 'USD' ? v * S.tasa : v / S.tasa)).replace('.', ','); };
+      const calc = () => { const a = cuenta($('to').value), b = cuenta($('td').value); const v = num($('tm').value); if (!(v > 0)) return; $('tn').value = String(r2(a.moneda === b.moneda ? v : a.moneda === 'USD' ? v * S.tasa : v / S.tasa)).replace('.', EN ? '.' : ','); };
       $('tm').oninput = calc; $('to').onchange = calc; $('td').onchange = calc;
     },
     guardarTransf(id) {
@@ -247,7 +288,7 @@
     },
     cuenta(id) {
       const c = id ? cuenta(id) : { nombre: '', moneda: 'USD', inicial: 0 }; const usada = id && S.movs.some((m) => m.cuenta === id || m.cuentaDest === id);
-      dlg(id ? 'Editar cuenta' : 'Nueva cuenta', '<div class="form"><label class="f full">Nombre<input class="inp" id="kn" value="' + esc(c.nombre) + '" placeholder="Ej.: Banco, efectivo, billetera"></label><label class="f">Moneda<select class="inp" id="km"' + (usada ? ' disabled' : '') + '><option value="USD"' + (c.moneda === 'USD' ? ' selected' : '') + '>Dólares</option><option value="VES"' + (c.moneda === 'VES' ? ' selected' : '') + '>Bolívares</option></select></label><label class="f">Saldo inicial<input class="inp num" id="ki" inputmode="decimal" value="' + c.inicial + '"></label></div>' + (usada ? '<p class="hint">La moneda no se puede cambiar porque la cuenta ya tiene movimientos.</p>' : ''),
+      dlg(id ? 'Editar cuenta' : 'Nueva cuenta', '<div class="form"><label class="f full">Nombre<input class="inp" id="kn" value="' + esc(c.nombre) + '" placeholder="Ej.: Banco, efectivo, billetera"></label><label class="f">Moneda<select class="inp" id="km"' + (usada ? ' disabled' : '') + '><option value="USD"' + (c.moneda === 'USD' ? ' selected' : '') + '>Dólares</option>' + (EN ? '' : '<option value="VES"' + (c.moneda === 'VES' ? ' selected' : '') + '>Bolívares</option>') + '</select></label><label class="f">Saldo inicial<input class="inp num" id="ki" inputmode="decimal" value="' + c.inicial + '"></label></div>' + (usada ? '<p class="hint">La moneda no se puede cambiar porque la cuenta ya tiene movimientos.</p>' : ''),
         (id && !usada ? '<button class="btn danger" style="margin-right:auto" onclick="F.borrarCuenta(\'' + id + '\')">Borrar</button>' : '') + '<button class="btn sec" onclick="F.cerrar()">Cancelar</button><button class="btn" onclick="F.guardarCuenta(' + (id ? '\'' + id + '\'' : '') + ')">Guardar</button>');
     },
     guardarCuenta(id) {
@@ -287,8 +328,8 @@
     },
     respaldo() { bajar('finanzas-respaldo-' + hoy() + '.json', JSON.stringify(S, null, 1), 'application/json'); },
     restaurar(f) { if (!f) return; const r = new FileReader(); r.onload = () => { try { const d = JSON.parse(r.result); if (d.v !== 1 || !Array.isArray(d.movs) || !Array.isArray(d.cuentas)) throw 0; S = d; save(); go(); toast('Respaldo cargado'); } catch (e) { toast('Ese archivo no es un respaldo de Finanzas', true); } }; r.readAsText(f); },
-    reset(modo) { dlg(modo === 'demo' ? 'Volver a los datos de ejemplo' : 'Empezar en blanco', '<p>' + (modo === 'demo' ? 'Se borra lo que registraste y se cargan los datos de ejemplo.' : 'Se borra todo y quedas con dos cuentas vacías para empezar.') + ' Si quieres conservar algo, descarga un respaldo antes.</p>', '<button class="btn sec" onclick="F.cerrar()">Cancelar</button><button class="btn danger" onclick="F.okReset(\'' + modo + '\')">Sí, continuar</button>'); },
-    okReset(modo) { S = modo === 'demo' ? seed() : blank(); save(); mes = hoy().slice(0, 7); cerrar(); location.hash = modo === 'demo' ? 'resumen' : 'cuentas'; go(); toast(modo === 'demo' ? 'Datos de ejemplo cargados' : 'Listo. Ajusta tus cuentas y su saldo inicial'); }
+    reset(modo) { dlg(modo === 'demo' ? 'Volver a los datos ficticios' : 'Empezar en blanco', '<p>' + (modo === 'demo' ? 'Se borra lo que registraste y se cargan los datos ficticios.' : 'Se borra todo y quedas con dos cuentas vacías para empezar.') + ' Si quieres conservar algo, descarga un respaldo antes.</p>', '<button class="btn sec" onclick="F.cerrar()">Cancelar</button><button class="btn danger" onclick="F.okReset(\'' + modo + '\')">Sí, continuar</button>'); },
+    okReset(modo) { S = modo === 'demo' ? seed() : blank(); save(); mes = hoy().slice(0, 7); cerrar(); location.hash = modo === 'demo' ? 'resumen' : 'cuentas'; go(); toast(modo === 'demo' ? 'Datos ficticios cargados' : 'Listo. Ajusta tus cuentas y su saldo inicial'); }
   };
   function bajar(n, d, t) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([d], { type: t })); a.download = n; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); }
 

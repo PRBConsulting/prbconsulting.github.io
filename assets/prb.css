@@ -47,6 +47,7 @@ h3{margin:0 0 10px;font-size:12px;text-transform:uppercase;letter-spacing:.6px;c
 .kpi .n{font-size:21px;font-weight:800;font-variant-numeric:tabular-nums}
 .kpi .t{color:var(--mut);font-size:12px}
 .g2{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:12px;margin-bottom:12px}
+.g2.sim{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr)}
 .g2e{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;margin-bottom:12px}
 .stack{display:grid;gap:12px}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
@@ -108,7 +109,7 @@ dialog .ft{display:flex;gap:8px;justify-content:flex-end;padding:12px 18px;borde
   .side button.on{box-shadow:inset 0 -3px 0 var(--acc)}
   main{padding:16px 16px 40px}
   .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .g2,.g2e{grid-template-columns:minmax(0,1fr)}
+  .g2,.g2e,.g2.sim{grid-template-columns:minmax(0,1fr)}
   .fab{display:flex}
   .form{grid-template-columns:1fr}
   .prb-bar .hide-m{display:none}
@@ -147,3 +148,19 @@ dialog .ft{display:flex;gap:8px;justify-content:flex-end;padding:12px 18px;borde
 .kpay button.on small{color:inherit}
 .kvuelto{font-size:22px;margin-top:10px;text-align:right;min-height:30px}
 @media(max-width:860px){.caja{grid-template-columns:minmax(0,1fr)}.kcart{position:static}.kfav{grid-template-columns:repeat(2,minmax(0,1fr))}}
+table.calc td{white-space:normal}
+table.calc td.r{white-space:nowrap;padding-left:12px}
+
+/* idioma */
+.prb-lang{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;flex:none}
+.prb-lang button{border:0;background:transparent;font:600 12px var(--sans,inherit);color:var(--mut);padding:5px 9px;cursor:pointer;white-space:nowrap}
+.prb-lang button+button{border-left:1px solid var(--line)}
+.prb-lang button.on{background:var(--acc,#2e9e6b);color:#fff}
+.hero .prb-lang{margin-top:18px;border-color:rgba(255,255,255,.35)}
+.hero .prb-lang button{color:#c9d3e1}.hero .prb-lang button+button{border-left-color:rgba(255,255,255,.35)}
+.hero .prb-lang button.on{background:var(--gold);color:var(--brand)}
+html[lang="en"] .bs{display:none!important}
+@media (max-width:640px){.prb-bar .demo{display:none}.prb-lang button{padding:4px 7px;font-size:11px}}
+.sm{display:none}
+@media (max-width:640px){.hm{display:none!important}.sm{display:table-cell}}
+@media (max-width:640px){th{padding:8px 6px}td{padding:7px 6px}th:first-child,td:first-child{padding-left:4px}th:last-child,td:last-child{padding-right:4px}tr.tot td:first-child{white-space:normal}}

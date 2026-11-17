@@ -11,7 +11,10 @@ Apps web simples para negocios pequeños, publicadas en GitHub Pages: https://pr
 ## Cómo funcionan
 
 - HTML, CSS y JavaScript sin dependencias ni servidor.
-- Los datos de cada visitante se guardan solo en su navegador (`localStorage`). Cada app trae datos de ejemplo inventados y permite descargar un respaldo, cargarlo o empezar en blanco.
+- Los datos de cada visitante se guardan solo en su navegador (`localStorage`). Cada app trae datos ficticios y permite descargar un respaldo, cargarlo o empezar en blanco.
 - Estilos compartidos en `assets/prb.css`.
 
-Todos los datos de ejemplo son inventados.
+Todos los datos ficticios son ficticios.
+
+## Idiomas
+Botón ES / EN · CA / EN · US en la barra. En inglés no hay bolívares ni tasa de cambio; Canadá usa HST 13% y Estados Unidos sales tax 7% (editable). Cada idioma guarda sus datos aparte.
