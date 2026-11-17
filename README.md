@@ -6,7 +6,7 @@ Apps web simples para negocios pequeños, publicadas en GitHub Pages: https://pr
 | --- | --- | --- |
 | X3 DATA Lite: compras, ventas, inventario y cierre de caja | `/x3-lite/` | Disponible |
 | Finanzas personales: cuentas en $ y Bs, presupuesto y metas | `/finanzas/` | Disponible |
-| X3 DATA | `/x3/` | Próximamente |
+| X3 DATA: caja rápida, facturación con IVA, CxC, CxP, costos, equilibrio, resultados, simulador | `/x3/` | Disponible |
 
 ## Cómo funcionan
 
