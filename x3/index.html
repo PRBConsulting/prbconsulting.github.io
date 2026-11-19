@@ -4,12 +4,23 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>X3 DATA · PRB Consulting</title>
-<meta name="description" content="X3 DATA: facturación con IVA, inventario, cuentas por cobrar y por pagar, costos, punto de equilibrio y estado de resultados. Demo funcional de PRB Consulting.">
+<meta name="description" content="X3 DATA: facturación con IVA, inventario, cobros y pagos, costos, producción por lotes, distribución, forma libre y nómina LOTTT. Demo funcional de PRB Consulting.">
 <link rel="icon" href="../assets/prb-logo.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap">
 <link rel="stylesheet" href="../assets/prb.css?v=5">
-<style>:root{--acc:#2e9e6b;--acc-ink:#fff;--brand2:#173528}</style>
+<style>:root{--acc:#2e9e6b;--acc-ink:#fff;--brand2:#173528}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin:6px 0 16px}
+.tile{display:flex;gap:12px;align-items:flex-start;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;cursor:pointer;font:inherit;color:inherit;transition:border-color .15s,transform .15s}
+.tile:hover{border-color:var(--acc);transform:translateY(-1px)}
+.tile .ic{flex:0 0 44px;height:44px;border-radius:12px;background:var(--soft);display:grid;place-items:center;font-size:22px}
+.tile b{display:block;font-size:15px;margin-bottom:2px}.tile span{color:var(--mut);font-size:13px;line-height:1.35}
+.tile .bd{display:inline-block;margin-top:6px;font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--acc);color:#fff}
+.tile .bd.w{background:var(--warn)}.tile .bd.b{background:var(--bad)}
+.back{display:inline-flex;align-items:center;gap:6px;background:none;border:0;color:var(--acc);font:inherit;font-weight:600;cursor:pointer;padding:0;margin-bottom:6px}
+.paso{display:flex;gap:10px;align-items:flex-start;margin:8px 0}.paso i{flex:0 0 24px;height:24px;border-radius:50%;background:var(--acc);color:#fff;font-style:normal;font-weight:800;font-size:13px;display:grid;place-items:center}
+details.mas{margin-top:12px}details.mas summary{cursor:pointer;color:var(--acc);font-weight:600}
+</style>
 <script src="../assets/i18n.js?v=5"></script>
 </head>
 <body>
@@ -26,6 +37,12 @@
 </div>
 <dialog id="dlg"></dialog>
 <div id="toast" role="status"></div>
-<script src="app.js?v=5"></script>
+<script src="app.js?v=6"></script>
+<script src="mod-ui.js?v=6"></script>
+<script src="mod-produccion.js?v=6"></script>
+<script src="mod-distribucion.js?v=6"></script>
+<script src="mod-forma.js?v=6"></script>
+<script src="mod-nomina.js?v=6"></script>
+<script src="mod-modulos.js?v=6"></script>
 </body>
 </html>

@@ -5,6 +5,8 @@
 (function () {
   'use strict';
   const KEY = 'prb-x3-v1' + PRB.sfx; const EN = PRB.en;
+  // ganchos para los módulos (producción, distribución, forma libre, nómina)
+  const H = window.X3H = { mods: [], stockHooks: [], facturaBtns: [], precio: (p) => p.precio, vendible: (p) => p.tipo !== 'insumo' };
   const PAGOS = PRB.pagos || ['Efectivo $', 'Efectivo Bs', 'Pago móvil', 'Punto de venta', 'Transferencia', 'Zelle'];
   const TRF = !EN ? 'Transferencia' : PRB.region === 'CA' ? 'E-transfer' : 'Check';
   const esEf = (p) => p === 'Cash' || String(p).startsWith('Efectivo');
@@ -47,6 +49,7 @@
   }
   function seed() {
     const st = blank();
+    st.demo = true;
     st.empresa = EN ? 'Demo Wholesale Inc.' : 'Comercializadora Demo, C.A.'; st.rif = EN ? '' : 'J-00000000-0'; st.varPct = 3;
     let s = 31; const rnd = () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
     const P = [ // código, nombre, categoría, unidad, costo, precio (sin IVA), mínimo, exento
@@ -156,6 +159,7 @@
     S.compras.forEach((c) => { if (!c.anulada) c.items.forEach((x) => (m[x.pid] = (m[x.pid] || 0) + x.cant)); });
     S.ventas.forEach((v) => { if (!v.anulada) v.items.forEach((x) => (m[x.pid] = (m[x.pid] || 0) - x.cant)); });
     S.ajustes.forEach((a) => (m[a.pid] = (m[a.pid] || 0) + a.cant));
+    H.stockHooks.forEach((f) => f(m, S));
     Object.keys(m).forEach((k) => (m[k] = r2(m[k]))); return m;
   }
   const fijosMes = () => r2(S.fijos.reduce((a, f) => a + (+f.monto || 0), 0));
@@ -181,10 +185,11 @@
   let vista = 'panel';
   function nav() {
     $('nav').innerHTML = '<div class="brand">X3 DATA<small>Gestión comercial y costos</small></div>' +
-      NAV.map((g) => '<div class="grp">' + g[0] + '</div>' + g[1].map((x) => '<button' + (x[0] === vista ? ' class="on"' : '') + ' onclick="location.hash=\'' + x[0] + '\'">' + x[1] + '</button>').join('')).join('') +
+      NAV.filter((g) => !g[2] || !S.mods || S.mods[g[2]] !== false).map((g) => '<div class="grp">' + g[0] + '</div>' + g[1].filter((x) => !x[2] || !S.mods || S.mods[x[2]] !== false).map((x) => '<button' + (x[0] === vista || (H.padre && H.padre[vista] === x[0]) ? ' class="on"' : '') + ' onclick="location.hash=\'' + x[0] + '\'">' + x[1] + '</button>').join('')).join('') +
       (EN ? '' : '<div class="tasa">Tasa del día<b>' + bs(S.tasa) + ' por $</b><button class="lnk" style="color:#cfe8da;margin-top:4px" onclick="X.tasa()">Cambiar tasa</button></div>');
   }
   function go(keepScroll) {
+    H.mods.forEach((m) => m.ensure && m.ensure(S));
     const k = location.hash.slice(1); vista = V[k] ? k : 'panel'; nav();
     const y = window.scrollY;
     $('m').innerHTML = V[vista]() + '<div class="foot">X3 DATA · hecho por <a href="../">PRB Consulting</a>. Demo con datos ficticios: lo que registres se guarda solo en este navegador. Puedes volver a los datos ficticios en Configuración.</div>';
@@ -238,7 +243,7 @@
   A.facturar = () => { const q = $('q'); q.oninput = () => { F.q = q.value; pintarCat(); }; q.onkeydown = (e) => { if (e.key === 'Enter') { const b = $('cat').querySelector('button[data-p]:not([disabled])'); if (b) b.click(); } }; pintarCat(); pintarCart(); };
   function pintarCat() {
     const sm = stockMap(); const f = F.q.toLowerCase().trim();
-    const L = S.productos.filter((p) => p.activo && (!f || (p.nombre + ' ' + p.cod).toLowerCase().includes(f)));
+    const L = S.productos.filter((p) => p.activo && H.vendible(p) && (!f || (p.nombre + ' ' + p.cod).toLowerCase().includes(f)));
     $('cat').innerHTML = L.length ? '<table><thead><tr><th>Producto</th><th class="r">Precio</th><th class="r">Exist.</th><th></th></tr></thead><tbody>' + L.map((p) => { const st = sm[p.id] - (F.items.find((x) => x.pid === p.id)?.cant || 0);
       return '<tr><td class="wrap"><b>' + esc(p.nombre) + '</b><div class="hint">' + esc(p.cod) + ' · ' + (p.exento ? 'Exento' : 'IVA ' + S.iva + '%') + '</div></td><td class="r"><b>' + usd(p.precio) + '</b>' + (EN ? '' : '<div class="hint">' + bs(p.precio * S.tasa) + '</div>') + '</td><td class="r">' + (st <= 0 ? '<span class="tag bad">0</span>' : qty(st)) + '</td><td><button class="btn" style="min-width:44px" aria-label="Agregar" data-p="' + p.id + '"' + (st <= 0 ? ' disabled' : '') + ' onclick="X.agregar(\'' + p.id + '\')">+</button></td></tr>'; }).join('') + '</tbody></table>' : '<div class="empty">No hay productos con ese nombre.</div>';
   }
@@ -260,14 +265,14 @@
   const KPAG = PRB.pagos || ['Efectivo $', 'Efectivo Bs', 'Pago móvil', 'Punto de venta', 'Zelle', 'Transferencia'];
   function buscarK(q) {
     q = q.trim().toLowerCase(); if (!q) return [];
-    const exacto = S.productos.filter((p) => p.activo && ((p.barras || '') === q || p.cod.toLowerCase() === q));
+    const exacto = S.productos.filter((p) => p.activo && H.vendible(p) && ((p.barras || '') === q || p.cod.toLowerCase() === q));
     if (exacto.length) return exacto;
-    return S.productos.filter((p) => p.activo && (p.nombre + ' ' + p.cod).toLowerCase().includes(q)).slice(0, 8);
+    return S.productos.filter((p) => p.activo && H.vendible(p) && (p.nombre + ' ' + p.cod).toLowerCase().includes(q)).slice(0, 8);
   }
   function favoritos() {
     const c = {}; vivas().filter((v) => v.fecha.slice(0, 10) >= addDays(hoy(), -30)).forEach((v) => v.items.forEach((x) => (c[x.pid] = (c[x.pid] || 0) + x.cant)));
-    const L = Object.keys(c).sort((a, b) => c[b] - c[a]).map(prod).filter((p) => p && p.activo);
-    S.productos.forEach((p) => { if (p.activo && !L.includes(p)) L.push(p); });
+    const L = Object.keys(c).sort((a, b) => c[b] - c[a]).map(prod).filter((p) => p && p.activo && H.vendible(p));
+    S.productos.forEach((p) => { if (p.activo && H.vendible(p) && !L.includes(p)) L.push(p); });
     return L.slice(0, 12);
   }
   const totK = () => { const sub = K.items.reduce((a, x) => a + x.cant * x.precio, 0); const grav = K.items.filter((x) => !prod(x.pid).exento).reduce((a, x) => a + x.cant * x.precio, 0); const iva = grav * S.iva / 100; return { sub, iva, total: r2(sub + iva) }; };
@@ -484,7 +489,7 @@
     kadd(pid, cant) {
       cant = cant > 0 ? r2(cant) : 1; const sm = stockMap(); const p = prod(pid); const x = K.items.find((i) => i.pid === pid);
       if ((x ? x.cant : 0) + cant > sm[pid]) return toast('Solo hay ' + qty(sm[pid]) + ' de ' + p.nombre, true);
-      if (x) { x.cant = r2(x.cant + cant); K.items.splice(K.items.indexOf(x), 1); K.items.push(x); } else K.items.push({ pid, cant, precio: p.precio });
+      if (x) { x.cant = r2(x.cant + cant); K.items.splice(K.items.indexOf(x), 1); K.items.push(x); } else K.items.push({ pid, cant, precio: H.precio(p, '') });
       K.ult = pid; K.q = ''; K.sel = 0; const q = $('kq'); if (q) { q.value = ''; $('ksug').innerHTML = ''; q.focus(); } pintarK();
     },
     kmas(i, d) { const x = K.items[i]; const sm = stockMap(); const n = r2(x.cant + d); if (n <= 0) K.items.splice(i, 1); else if (n > sm[x.pid]) return toast('No hay más existencia', true); else x.cant = n; K.ult = null; pintarK(); $('kq')?.focus(); },
@@ -503,7 +508,7 @@
       toast('Venta ' + nfac(v.num) + ' lista' + (vuelto > 0.004 ? ' · vuelto ' + (enBs ? bs(vuelto) : usd(vuelto)) : ''));
     },
     // facturar
-    agregar(pid) { const sm = stockMap(); const x = F.items.find((i) => i.pid === pid); const p = prod(pid); if ((x ? x.cant : 0) + 1 > sm[pid]) return toast('No hay más existencia de ' + p.nombre, true); if (x) x.cant++; else F.items.push({ pid, cant: 1, precio: p.precio }); pintarCart(); pintarCat(); },
+    agregar(pid) { const sm = stockMap(); const x = F.items.find((i) => i.pid === pid); const p = prod(pid); if ((x ? x.cant : 0) + 1 > sm[pid]) return toast('No hay más existencia de ' + p.nombre, true); if (x) x.cant++; else F.items.push({ pid, cant: 1, precio: H.precio(p, F.cli) }); pintarCart(); pintarCat(); },
     fcant(i, v) { const n = num(v); const x = F.items[i]; const sm = stockMap(); if (!(n > 0)) F.items.splice(i, 1); else if (n > sm[x.pid]) { x.cant = sm[x.pid]; toast('Solo hay ' + qty(sm[x.pid]), true); } else x.cant = r2(n); pintarCart(); pintarCat(); },
     fquitar(i) { F.items.splice(i, 1); pintarCart(); pintarCat(); },
     fvaciar() { F.items = []; pintarCart(); pintarCat(); },
@@ -523,7 +528,7 @@
         '<table><thead><tr><th>Producto</th><th class="r">Cant.</th><th class="r">Precio</th><th class="r">Total</th></tr></thead><tbody>' + v.items.map((x) => '<tr><td class="wrap">' + esc(prod(x.pid)?.nombre) + (x.exento ? ' (E)' : '') + '</td><td class="r">' + qty(x.cant) + '</td><td class="r">' + usd(x.precio) + '</td><td class="r">' + usd(x.cant * x.precio) + '</td></tr>').join('') +
         '<tr><td colspan="3">Base imponible</td><td class="r">' + usd(v.grav) + '</td></tr><tr><td colspan="3">Exento</td><td class="r">' + usd(v.sub - v.grav) + '</td></tr><tr><td colspan="3">IVA ' + S.iva + '%</td><td class="r">' + usd(v.iva) + '</td></tr><tr class="tot"><td colspan="3">Total $</td><td class="r">' + usd(v.total) + '</td></tr><tr class="tot bs"><td colspan="3">Total Bs (tasa ' + nf2.format(v.tasa) + ')</td><td class="r">' + bs(v.total * v.tasa) + '</td></tr></tbody></table>' +
         (v.abonos.length ? '<h3 style="margin-top:14px">Pagos</h3><table><tbody>' + v.abonos.map((a) => '<tr><td>' + fdia(a.fecha) + '</td><td>' + esc(a.pago) + '</td><td class="r">' + usd(a.monto) + '</td></tr>').join('') + '<tr class="tot"><td colspan="2">Saldo</td><td class="r">' + usd(saldo(v)) + '</td></tr></tbody></table>' : '') + (v.anulada ? '<p><b style="color:var(--bad)">FACTURA ANULADA</b></p>' : '') + '</div>',
-        (!v.anulada && !v.abonos.length ? '<button class="btn danger" style="margin-right:auto" onclick="X.anular(\'' + id + '\')">Anular</button>' : '') + '<button class="btn sec" onclick="X.imprimir()">Imprimir</button>' + (!v.anulada && saldo(v) > 0 ? '<button class="btn" onclick="X.abonar(\'' + id + '\')">Registrar cobro</button>' : '<button class="btn" onclick="X.cerrar()">Listo</button>'), 620);
+        (!v.anulada && !v.abonos.length ? '<button class="btn danger" style="margin-right:auto" onclick="X.anular(\'' + id + '\')">Anular</button>' : '') + H.facturaBtns.map((f) => f(v)).join('') + '<button class="btn sec" onclick="X.imprimir()">Imprimir</button>' + (!v.anulada && saldo(v) > 0 ? '<button class="btn" onclick="X.abonar(\'' + id + '\')">Registrar cobro</button>' : '<button class="btn" onclick="X.cerrar()">Listo</button>'), 620);
     },
     imprimir() { const w = window.open('', '_blank', 'width=720,height=800'); if (!w) return toast('Permite ventanas emergentes para imprimir', true); w.document.write('<title>Documento</title><link rel="stylesheet" href="' + new URL('../assets/prb.css', location.href) + '"><body style="background:#fff;padding:24px">' + $('doc').innerHTML + '<script>setTimeout(()=>print(),400)<\/script>'); w.document.close(); },
     anular(id) { dlg('Anular factura', '<p>La mercancía vuelve al inventario y la factura deja de contar en ventas y cuentas por cobrar.</p>', '<button class="btn sec" onclick="X.cerrar()">No</button><button class="btn danger" onclick="X.okAnular(\'' + id + '\')">Sí, anular</button>'); },
@@ -645,5 +650,6 @@
   function bajar(n, d, t) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([d], { type: t })); a.download = n; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); }
   window.$ = $;
 
-  load(); go();
+  Object.defineProperty(H, 'S', { get: () => S }); Object.assign(H, { save, go, V, A, NAV, dlg, cerrar, toast, kpi, $, esc, usd, bs, qty, pct, num, uid, r2, hoy, addDays, diasEntre, fdia, nfac, nf2, prod, cli, cliNom, saldo, pagado, stockMap, vivas, csv, bajar, armarVenta, nomMes, isoTime, EN });
+  document.addEventListener('DOMContentLoaded', () => { load(); go(); });
 })();
