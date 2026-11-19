@@ -44,19 +44,6 @@
   }
   const pl = () => FL().plantillas.find((x) => x.id === FL().activa) || FL().plantillas[0];
 
-  /* ---------- monto en letras ---------- */
-  const U = ['', 'UN', 'DOS', 'TRES', 'CUATRO', 'CINCO', 'SEIS', 'SIETE', 'OCHO', 'NUEVE', 'DIEZ', 'ONCE', 'DOCE', 'TRECE', 'CATORCE', 'QUINCE', 'DIECISÉIS', 'DIECISIETE', 'DIECIOCHO', 'DIECINUEVE', 'VEINTE', 'VEINTIUN', 'VEINTIDÓS', 'VEINTITRÉS', 'VEINTICUATRO', 'VEINTICINCO', 'VEINTISÉIS', 'VEINTISIETE', 'VEINTIOCHO', 'VEINTINUEVE'];
-  const D = ['', '', '', 'TREINTA', 'CUARENTA', 'CINCUENTA', 'SESENTA', 'SETENTA', 'OCHENTA', 'NOVENTA'];
-  const C = ['', 'CIENTO', 'DOSCIENTOS', 'TRESCIENTOS', 'CUATROCIENTOS', 'QUINIENTOS', 'SEISCIENTOS', 'SETECIENTOS', 'OCHOCIENTOS', 'NOVECIENTOS'];
-  function m999(n) { if (n === 100) return 'CIEN'; const c = Math.floor(n / 100), r = n % 100; let t = C[c]; if (r) { const s = r < 30 ? U[r] : D[Math.floor(r / 10)] + (r % 10 ? ' Y ' + U[r % 10] : ''); t = (t ? t + ' ' : '') + s; } return t; }
-  function letras(n) {
-    n = Math.floor(n); if (n === 0) return 'CERO'; let out = [];
-    const mm = Math.floor(n / 1e6), mil = Math.floor((n % 1e6) / 1000), r = n % 1000;
-    if (mm) out.push(mm === 1 ? 'UN MILLÓN' : m999(mm) + ' MILLONES'); if (mil) out.push(mil === 1 ? 'UN MIL' : m999(mil) + ' MIL'); if (r) out.push(m999(r));
-    return out.join(' ');
-  }
-  H.letras = (v, moneda) => { const e = Math.floor(r2(v) + 1e-9), c = Math.round((r2(v) - e) * 100); return 'SON: ' + letras(e) + ' ' + (moneda || 'BOLÍVARES') + ' CON ' + String(c).padStart(2, '0') + '/100'; };
-
   /* ---------- datos de una factura para la forma ---------- */
   function datos(v, p) {
     const bsM = p.moneda === 'bs'; const f = bsM ? v.tasa : 1; const m = (x) => nf2.format(r2(x * f));
