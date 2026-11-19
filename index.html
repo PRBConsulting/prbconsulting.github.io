@@ -26,6 +26,16 @@ a.app-c:hover,a.app-c:focus-visible{border-color:var(--gold);outline:none}
 .app-c.soon{background:#fafbfc}.app-c.soon b,.app-c.soon span{color:#7a8596}
 .note{max-width:960px;margin:28px auto 40px;padding:0 16px;color:var(--mut);font-size:13px}
 .note a{color:var(--brand);font-weight:600}
+.planes{max-width:960px;margin:36px auto 0;padding:0 16px}
+.planes h2{font:700 26px var(--disp);margin:0 0 4px}.planes>p{color:var(--mut);margin:0 0 16px}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
+.plan{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:6px}
+.plan.dest{border:2px solid var(--gold)}
+.plan em{font-style:normal;font-size:12px;font-weight:700;color:#8a5414;text-transform:uppercase;letter-spacing:.6px}
+.plan b{font:700 19px var(--disp)}.plan .pr{font-weight:700;color:var(--brand)}
+.plan ul{margin:6px 0 0;padding-left:18px;color:var(--mut);font-size:14px}.plan li{margin:3px 0}
+.planes .cta{margin-top:16px;background:var(--brand);color:#fff;border-radius:14px;padding:18px 20px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.planes .cta a{background:var(--gold);color:var(--brand);font-weight:700;text-decoration:none;padding:10px 16px;border-radius:10px}
 </style>
 <script src="assets/i18n.js?v=5"></script>
 </head>
@@ -42,6 +52,17 @@ a.app-c:hover,a.app-c:focus-visible{border-color:var(--gold);outline:none}
   <a class="app-c" href="x3/"><em>Disponible</em><b>X3 DATA</b><span>Sistema administrativo completo: ventas y facturación con IVA, inventario, cobros y pagos, costos y equilibrio, producción por lotes, distribución, impresión en forma libre y nómina según la LOTTT. Enciendes solo lo que usas.</span><span class="go">Abrir la app →</span></a>
   <a class="app-c" href="nomina/"><em>Disponible</em><b>Nómina LOTTT</b><span>Para quien solo necesita la nómina: liquidaciones, vacaciones, utilidades, prestaciones sociales y la quincena con los aportes de ley y recibos. Cálculos con su artículo y casos de prueba.</span><span class="go">Abrir la app →</span></a>
 </div>
+<section class="planes" id="planes">
+  <h2>Planes de pago (próximamente)</h2>
+  <p>Las demos son gratis y lo seguirán siendo. Si quieres usar el sistema en serio en tu negocio, vamos a tener planes con tus datos en la nube y acompañamiento.</p>
+  <div class="pgrid">
+    <div class="plan"><em>Gratis</em><b>Demo</b><span class="pr">$0</span><ul><li>Todas las apps con datos de ejemplo</li><li>Tus datos se guardan solo en tu navegador</li><li>Respaldo en archivo para no perderlos</li><li>Un solo equipo</li></ul></div>
+    <div class="plan"><em>Mensual</em><b>Básico</b><span class="pr">Próximamente</span><ul><li>Compra, venta, inventario y facturación</li><li>Datos en la nube con tu usuario y clave</li><li>Úsalo en la PC y en el teléfono</li><li>Respaldo automático todos los días</li><li>Soporte por WhatsApp</li></ul></div>
+    <div class="plan dest"><em>Mensual</em><b>Pro</b><span class="pr">Próximamente</span><ul><li>Todo lo del Básico</li><li>Producción por lotes y distribución</li><li>Impresión en forma libre</li><li>Nómina según la LOTTT, con parámetros actualizados</li><li>Varios usuarios con permisos (dueño, encargado, cajero)</li></ul></div>
+    <div class="plan"><em>Pago único</em><b>Implementación</b><span class="pr">Según tu negocio</span><ul><li>Cargamos tus productos, clientes y trabajadores</li><li>Ajustamos tu forma libre a tu impresora</li><li>Capacitación para ti y tu equipo</li><li>Ajustes a la medida de tu negocio</li></ul></div>
+  </div>
+  <div class="cta"><span>¿Te interesa usarlo en tu negocio? Escríbenos y te avisamos primero cuando abran los planes.</span><a href="https://www.instagram.com/prbconsulting/" target="_blank" rel="noopener">Escríbenos por Instagram</a></div>
+</section>
 <p class="note">Hecho por PRB Consulting · <a href="https://prb-consulting.webflow.io/" target="_blank" rel="noopener">Sitio web</a> · <a href="https://www.instagram.com/prbconsulting/" target="_blank" rel="noopener">Instagram</a>. Todos los datos de las demos son ficticios.</p>
 </main>
 </body>
