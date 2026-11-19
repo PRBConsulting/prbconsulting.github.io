@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nómina LOTTT · PRB Consulting</title>
+<meta name="description" content="Nómina para Venezuela según la LOTTT: liquidaciones, vacaciones, utilidades, prestaciones sociales y quincena con aportes de ley y recibos. Demo funcional de PRB Consulting.">
+<link rel="icon" href="../assets/prb-logo.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap">
+<link rel="stylesheet" href="../assets/prb.css?v=5">
+<style>:root{--acc:#2e9e6b;--acc-ink:#fff;--brand2:#173528}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin:6px 0 16px}
+.tile{display:flex;gap:12px;align-items:flex-start;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;cursor:pointer;font:inherit;color:inherit;transition:border-color .15s,transform .15s}
+.tile:hover{border-color:var(--acc);transform:translateY(-1px)}
+.tile .ic{flex:0 0 44px;height:44px;border-radius:12px;background:var(--soft);display:grid;place-items:center;font-size:22px}
+.tile b{display:block;font-size:15px;margin-bottom:2px}.tile span{color:var(--mut);font-size:13px;line-height:1.35}
+.tile .bd{display:inline-block;margin-top:6px;font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--acc);color:#fff}
+.tile .bd.w{background:var(--warn)}.tile .bd.b{background:var(--bad)}
+.back{display:inline-flex;align-items:center;gap:6px;background:none;border:0;color:var(--acc);font:inherit;font-weight:600;cursor:pointer;padding:0;margin-bottom:6px}
+.paso{display:flex;gap:10px;align-items:flex-start;margin:8px 0}.paso i{flex:0 0 24px;height:24px;border-radius:50%;background:var(--acc);color:#fff;font-style:normal;font-weight:800;font-size:13px;display:grid;place-items:center}
+details.mas{margin-top:12px}details.mas summary{cursor:pointer;color:var(--acc);font-weight:600}
+</style>
+</head>
+<body>
+<div class="prb-bar">
+  <a href="../"><img src="https://cdn.prod.website-files.com/6428993007c9bb0c2e9f60b5/6428ac27bb87cbb7fb2e982d_Copia%20de%20P.R.B.png" onerror="this.onerror=null;this.src='../assets/prb-logo.svg'" alt=""></a>
+  <a href="../"><b>PRB Consulting</b></a>
+  <span class="sp"></span>
+  <a class="hide-m" href="https://www.instagram.com/prbconsulting/" target="_blank" rel="noopener">Instagram</a>
+  <span class="demo">Demo · <span class="hide-m">tus datos se guardan solo en este navegador</span><span class="show-m">datos en tu navegador</span></span>
+</div>
+<div class="app">
+  <nav class="side" id="nav"></nav>
+  <main id="m"></main>
+</div>
+<dialog id="dlg"></dialog>
+<div id="toast" role="status"></div>
+<script src="core.js?v=1"></script>
+<script src="../x3/mod-ui.js?v=7"></script>
+<script src="../x3/mod-nomina.js?v=7"></script>
+</body>
+</html>
