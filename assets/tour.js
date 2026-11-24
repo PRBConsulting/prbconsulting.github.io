@@ -250,7 +250,7 @@
     id: 'pago', name: 'Un inquilino me pagó: ¿cómo lo anoto?', desc: 'Caso real: registrar el pago y mandar el recibo',
     steps: [
       { go: 'inicio', sel: '#t-pago', on: 'click', t: 'Registrar un pago', d: 'Desde el inicio, toca <b>Registrar un pago</b>.' },
-      { sel: '#pg-c', on: null, t: '¿Quién pagó?', d: 'Elige el inquilino. Abajo ves cuánto debe y de qué meses.' },
+      { sel: '#pg-c', on: null, t: '¿Quién pagó?', d: 'Elige el inquilino. Si paga condominio, eliges si el pago va al canon, al condominio o a ambos.' },
       { sel: '#pg-m', on: null, t: 'El monto', d: 'Ya viene lo que toca pagar. Si pagó en bolívares, escribe los Bs y se convierte solo a la tasa.' },
       { sel: '#pg-ok', on: 'click', t: 'Regístralo', d: 'El pago se aplica primero al mes más viejo. Toca <b>Registrar</b>.' },
       { sel: '#recibo', on: null, t: 'El recibo', d: 'Sale listo con número. Lo imprimes o se lo mandas por WhatsApp.' },
@@ -265,6 +265,17 @@
       { sel: '#b-editar', on: 'click', t: 'Dibuja tu terreno', d: 'Toca <b>Editar plano</b> para mover y cambiar el tamaño de los espacios.' },
       { sel: '#b-addu', on: null, t: 'Agrega espacios', d: 'Con <b>Agregar espacio</b> sumas un local nuevo; luego lo arrastras a su sitio.' },
       listo('¡Listo!', 'Toca <b>Ver</b> para volver al modo normal.')
+    ]
+  }, {
+    id: 'condo', name: 'Cobrar el condominio del mes', desc: 'Gastos comunes repartidos entre los locales, aparte del canon',
+    steps: [
+      { go: 'condominio', sel: '#k-modo', on: null, t: 'Cómo se reparte', d: 'Por alícuota (%) o en partes iguales. También puedes sumar fondo de reserva y honorarios.' },
+      { sel: '#b-cg', on: 'click', t: 'Anota los gastos comunes', d: 'Vigilancia, limpieza, agua, luz de áreas comunes… Toca <b>Anotar gasto común</b>.' },
+      { sel: '#cg-m', on: null, t: 'Cuánto costó', d: 'Elige la categoría y escribe el monto (en $ o Bs).' },
+      { sel: '#cg-ok', on: 'click', t: 'Guárdalo', d: 'Toca <b>Guardar</b>.' },
+      { sel: '#reparto', on: null, t: 'El reparto', d: 'La app calcula la cuota de cada local. Los vacíos no pagan: esa parte la asume el dueño.' },
+      { sel: '#b-emit', on: 'click', t: 'Emite las cuotas', d: 'Cada inquilino recibe su cuota en el estado de cuenta, aparte del canon.' },
+      listo('¡Listo!', 'En <b>Cobros</b> ves canon y condominio por separado. Al registrar un pago eliges a qué va, y el recibo sale con las dos partidas.')
     ]
   }];
 
