@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PRB Consulting · Datos que ordenan tu negocio</title>
+<meta name="description" content="Consultoría de datos y marca para pequeñas y medianas empresas: sistemas de control, apps de gestión y estrategia de contenido. Trabajo remoto para todo el mundo.">
+<meta property="og:title" content="PRB Consulting · Datos y marca">
+<meta property="og:description" content="Sistemas de control, apps de gestión y estrategia de contenido para pymes. Tus datos quedan contigo, sin mensualidad.">
+<meta property="og:image" content="https://prbconsulting.github.io/portfolio/img/x3.webp">
+<link rel="icon" href="../assets/prb-sello.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Inter:wght@400;600&display=swap">
+<style>
+/* Marca PRB v1: marfil, tinta, oliva y dorado · Cormorant Garamond + Inter · espacios múltiplos de 3 · radios 6/12/18 */
+:root{--marfil:#FAF8F3;--blanco:#fff;--tinta:#1E2618;--texto:#3B4433;--texto-2:#5C6352;--linea:#DDD7C8;--suave:#F2EFE7;
+  --oliva:#33402A;--oliva-hover:#27321F;--dorado:#B08D3C;--dorado-claro:#C9A75A;--dorado-texto:#7A5F1F;
+  --disp:"Cormorant Garamond",Georgia,serif;--font:Inter,"Segoe UI",Roboto,Arial,sans-serif}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--marfil);color:var(--texto);font:16px/1.65 var(--font)}
+img{max-width:100%;height:auto;display:block}
+a{color:var(--oliva)}
+:focus-visible{outline:2px solid var(--dorado-texto);outline-offset:3px}
+.w{max-width:1104px;margin:0 auto;padding:0 24px}
+h1,h2,h3{font-family:var(--disp);font-weight:600;color:var(--tinta);line-height:1.15;margin:0;text-wrap:balance}
+.kick{font-size:12px;font-weight:600;letter-spacing:1.8px;text-transform:uppercase;color:var(--dorado-texto);margin:0 0 12px}
+/* barra */
+.top{position:sticky;top:0;z-index:5;background:rgba(255,255,255,.96);border-bottom:1px solid var(--linea)}
+.top .w{display:flex;align-items:center;gap:24px;height:60px}
+.logo{display:flex;align-items:center;gap:12px;text-decoration:none;margin-right:auto}
+.logo img{height:30px;width:auto}
+.logo b{font:600 22px var(--disp);color:var(--tinta);letter-spacing:.2px}
+.top nav{display:flex;gap:24px}
+.top nav a{color:var(--texto-2);text-decoration:none;font-size:14px}
+.top nav a:hover{color:var(--tinta)}
+.top .cta{background:var(--oliva);color:#fff;padding:9px 18px;border-radius:6px;text-decoration:none;font-size:14px;font-weight:600}
+.top .cta:hover{background:var(--oliva-hover)}
+.lang{display:flex;border:1px solid var(--linea);border-radius:6px;overflow:hidden}
+.lang button{border:0;background:none;padding:6px 10px;font:600 12px var(--font);color:var(--texto-2);cursor:pointer}
+.lang button.on{background:var(--tinta);color:#fff}
+/* botones */
+.btns{display:flex;flex-wrap:wrap;gap:12px}
+.btn{display:inline-block;padding:12px 24px;border-radius:6px;font-weight:600;text-decoration:none;border:1.5px solid var(--oliva);color:var(--oliva)}
+.btn:hover{background:var(--suave)}
+.btn.p{background:var(--oliva);color:#fff}
+.btn.p:hover{background:var(--oliva-hover)}
+/* portada (oscura, pantalla completa) */
+.hero{background:var(--oliva);color:#DCE1D3;min-height:calc(100vh - 61px);min-height:calc(100svh - 61px);display:flex;align-items:center;padding:48px 0;position:relative;overflow:hidden}
+.hero .w{position:relative;z-index:1;width:100%}
+.hero::after{content:"";position:absolute;right:-6%;top:50%;width:min(52vw,640px);aspect-ratio:64/48;transform:translateY(-58%);background:url(../assets/prb-logo-dorado.svg) center/contain no-repeat;opacity:.13;pointer-events:none}
+.hero .kick{color:var(--dorado-claro)}
+.hero h1{font-size:clamp(38px,6vw,68px);max-width:860px;color:var(--marfil)}
+.hero h1 em{font-style:normal;color:var(--dorado-claro)}
+.hero .lead{font-size:19px;max-width:620px;margin:24px 0 36px;color:#DCE1D3}
+.hero .btn{border-color:var(--dorado-claro);color:var(--marfil)}
+.hero .btn:hover{background:rgba(255,255,255,.06)}
+.hero .btn.p{background:var(--dorado-claro);border-color:var(--dorado-claro);color:var(--tinta)}
+.hero .btn.p:hover{background:#D6B66C}
+.facts{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid rgba(201,167,90,.35);margin-top:60px}
+.facts div{padding:24px 24px 0 0}
+.facts div+div{padding-left:24px;border-left:1px solid rgba(201,167,90,.25)}
+.facts b{display:block;font:600 42px/1 var(--disp);color:var(--dorado-claro);font-variant-numeric:lining-nums;margin-bottom:12px}
+.facts span{font-size:14px;color:#B9C0AE;line-height:1.5;display:block}
+/* secciones */
+section{padding:96px 0}
+section.alt{background:var(--suave)}
+.sec-h{max-width:720px;margin-bottom:36px}
+.sec-h h2{font-size:clamp(28px,3.9vw,42px)}
+.sec-h p{margin:12px 0 0}
+/* equipo */
+.team{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.person{background:var(--blanco);border:1px solid var(--linea);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
+.person .hd{display:flex;gap:18px;align-items:flex-end;padding:24px 24px 0}
+.person .hd img{width:150px;aspect-ratio:4/5;object-fit:cover;border-radius:6px;flex:none}
+.person .hd div{padding-bottom:6px}
+.person .b{padding:24px;display:flex;flex-direction:column;gap:12px;flex:1}
+.person h3{font-size:28px}
+.person .rol{margin:6px 0 0;color:var(--dorado-texto);font-weight:600;font-size:14px}
+.person p{margin:0;font-size:15px}
+.person .skills{color:var(--texto-2);font-size:14px;border-top:1px solid var(--linea);padding-top:12px;margin-top:auto}
+/* servicios */
+.serv{display:grid;grid-template-columns:repeat(6,1fr);gap:18px}
+.serv .card{grid-column:span 2}
+.serv .card:nth-child(n+4){grid-column:span 3}
+.serv .card{background:var(--blanco);border:1px solid var(--linea);border-radius:12px;padding:24px}
+.serv h3{font-size:24px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--linea)}
+.serv ul{margin:0;padding:0;list-style:none}
+.serv li{font-size:15px;padding:6px 0 6px 18px;position:relative}
+.serv li::before{content:"";position:absolute;left:0;top:15px;width:6px;height:6px;background:var(--dorado);transform:rotate(45deg)}
+/* caso Prisma (oscuro) */
+.caso{background:var(--oliva);color:#E4E8DC}
+.caso h2,.caso h3{color:var(--marfil)}
+.caso .kick{color:var(--dorado-claro)}
+.caso .g{display:grid;grid-template-columns:1.1fr 1fr;gap:48px;align-items:start}
+.caso h2{font-size:clamp(28px,3.9vw,42px)}
+.caso .intro p{font-size:18px;margin:18px 0 24px}
+.caso .shot{border-radius:12px;overflow:hidden;border:1px solid rgba(201,167,90,.4);margin-bottom:24px}
+.caso .btn{border-color:var(--dorado-claro);color:var(--marfil)}
+.caso .btn:hover{background:rgba(255,255,255,.06)}
+.pilares{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.pilares div{border:1px solid rgba(201,167,90,.35);border-radius:12px;padding:24px}
+.pilares h3{font-size:22px;color:var(--dorado-claro);margin-bottom:6px}
+.pilares p{margin:0;font-size:15px}
+/* X3 */
+.x3{display:grid;grid-template-columns:1fr 1.15fr;gap:48px;align-items:center}
+.x3 p{margin:0 0 18px}
+.x3 .lema{font:600 24px/1.3 var(--disp);color:var(--tinta);border-left:3px solid var(--dorado);padding-left:18px;margin:24px 0}
+.x3 .shot,.caso .shot{box-shadow:0 18px 48px -24px rgba(30,38,24,.45)}
+.x3 .shot{border:1px solid var(--linea);border-radius:12px;overflow:hidden;background:var(--blanco)}
+/* contacto */
+.contacto{display:grid;grid-template-columns:1.2fr 1fr;gap:48px;align-items:center}
+.vias{display:flex;flex-direction:column;gap:12px}
+.vias a{display:flex;justify-content:space-between;align-items:center;background:var(--blanco);border:1px solid var(--linea);border-radius:6px;padding:18px 24px;text-decoration:none;color:var(--tinta);font-weight:600}
+.vias a span{color:var(--texto-2);font-weight:400;font-size:14px}
+.vias a:hover{border-color:var(--oliva)}
+.vias a.wa{background:var(--oliva);border-color:var(--oliva);color:#fff}
+.vias a.wa span{color:#E4E8DC}
+footer{border-top:1px solid var(--linea);padding:36px 0;font-size:14px;color:var(--texto-2)}
+footer .w{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;align-items:center}
+footer img{height:24px}
+footer .l{display:flex;gap:12px;align-items:center}
+/* móvil */
+@media (max-width:900px){
+  .top nav{display:none}
+  .top .w{gap:12px}
+  .facts{grid-template-columns:1fr 1fr;margin-top:36px}
+  .facts div,.facts div+div{padding:18px 12px 18px 0;border-left:0}
+  .serv .card,.serv .card:nth-child(n+4){grid-column:auto}
+  .hero::after{width:90vw;right:-30%;opacity:.08}
+  .team,.serv,.caso .g,.x3,.contacto{grid-template-columns:1fr}
+  .x3 .shot{order:-1}
+  section{padding:48px 0}
+  .hero{min-height:0;padding:48px 0}
+}
+@media (max-width:480px){.pilares{grid-template-columns:1fr}.facts b{font-size:30px}}
+</style>
+</head>
+<body>
+
+<header class="top"><div class="w">
+  <a class="logo" href="#inicio"><img src="../assets/prb-logo.svg" alt="" width="40" height="30"><b>PRB Consulting</b></a>
+  <nav aria-label="Secciones"><a href="#nosotros">Nosotros</a><a href="#servicios">Servicios</a><a href="#caso">Caso Prisma</a><a href="#x3data">X3 DATA</a></nav>
+  <div class="lang" role="group" aria-label="Idioma / Language"><button type="button" data-l="es">ES</button><button type="button" data-l="en">EN</button></div>
+  <a class="cta" href="#contacto">Hablemos</a>
+</div></header>
+
+<main id="inicio">
+<div class="hero"><div class="w">
+  <p class="kick">Consultoría de datos y marca · Trabajo remoto para todo el mundo</p>
+  <h1>Datos que ordenan tu negocio. <em>Marcas que lo hacen crecer.</em></h1>
+  <p class="lead">Sistemas de control, apps de gestión y estrategia de contenido para pequeñas y medianas empresas. Trabajamos en remoto.</p>
+  <div class="btns"><a class="btn p" href="#contacto">Hablemos de tu negocio</a><a class="btn" href="#servicios">Ver servicios</a></div>
+  <div class="facts">
+    <div><b>3</b><span>líneas de servicio: datos, apps y marca</span></div>
+    <div><b>+8</b><span>años creando contenido que vende</span></div>
+    <div><b>+10</b><span>países donde hemos trabajado: Venezuela, Ecuador, Chile, Reino Unido y el Caribe</span></div>
+    <div><b>2020</b><span>año en que nació Alimentos Prisma, nuestro caso propio</span></div>
+  </div>
+</div></div>
+
+<section id="nosotros" class="alt"><div class="w">
+  <div class="sec-h">
+    <p class="kick">Quiénes somos</p>
+    <h2>Un equipo de dos: uno ordena los datos, otra construye la marca.</h2>
+    <p>Entramos a tu negocio, entendemos cómo funciona de verdad y armamos las herramientas que necesita para controlar costos, vender más y decidir con números.</p>
+    <p>También enseñamos: talleres de Excel, Power BI y contenido para redes, para que tu equipo pueda seguir solo.</p>
+  </div>
+  <div class="team">
+    <article class="person">
+      <div class="hd"><img src="https://cdn.prod.website-files.com/6428993007c9bb0c2e9f60b5/6afa6311db9cbf45b12ba3f1_daniel-retrato-2.webp" alt="Daniel Pineda, socio de PRB Consulting" width="150" height="188" loading="lazy"><div><h3>Daniel Pineda</h3><p class="rol">Datos, sistemas y apps</p></div></div>
+      <div class="b">
+        <p>Analista de datos y administrador. Convierte datos desordenados en sistemas que el negocio usa todos los días: modelos de datos, cruces y conciliaciones, tableros y apps de gestión. Lleva más de 9 años dirigiendo negocios de alimentos, entre ellos Alimentos Prisma, que cofundó, así que conoce el problema desde adentro. Creó X3 DATA y ha hecho sistemas de control para panaderías, heladerías, casas de cambio y tiendas de agroinsumos. En su trabajo actual coordina la nómina mensual de varias empresas en distintos países del Caribe, unas 1.500 personas, da soporte a los clientes y participa en la implementación de proyectos. Licenciado en Administración (cum laude).</p>
+        <p class="skills">Excel · Power Pivot y DAX · Power Query · Power BI · Google Sheets · Apps Script · SQL</p>
+      </div>
+    </article>
+    <article class="person">
+      <div class="hd"><img src="https://cdn.prod.website-files.com/6428993007c9bb0c2e9f60b5/6af9de53e4dd9b5115037e2d_estefania-romero.webp" alt="Estefanía Romero, socia de PRB Consulting" width="150" height="188" loading="lazy"><div><h3>Estefanía Romero</h3><p class="rol">Estrategia de marketing y contenido</p></div></div>
+      <div class="b">
+        <p>Estratega de marketing y contenido. Convierte marcas pequeñas en marcas que la gente reconoce y compra: estrategia, plan de contenido, identidad visual y campañas. Lleva más de 8 años creando contenido que vende y es Content Manager en Facto Estudio Creativo desde 2018, donde ha liderado equipos de hasta 8 personas. Construyó desde cero las marcas Prisma y Blinky, del logo y las etiquetas a la comunidad en Instagram. Creó el Método H.O.C. y acompaña a emprendedores con mentorías, auditorías de Instagram y plantillas. Especialista en Gerencia de Marketing (CIDE-ULA, con honores).</p>
+        <p class="skills">Estrategia de contenido · Redes sociales · Identidad visual · Campañas<br><a href="https://beacons.ai/soyestefaniaromero" target="_blank" rel="noopener">Mentorías y plantillas de Estefanía</a></p>
+      </div>
+    </article>
+  </div>
+</div></section>
+
+<section id="servicios"><div class="w">
+  <div class="sec-h"><p class="kick">Servicios</p><h2>Cómo te ayudamos</h2></div>
+  <div class="serv">
+    <div class="card"><h3>Datos y sistemas</h3><ul>
+      <li>Diagnóstico administrativo inicial</li>
+      <li>Sistemas de captura y gestión de datos: clientes, proveedores, inventario, ventas, pagos y nómina</li>
+      <li>Costeo por receta o producto y control de costos</li>
+      <li>Tableros interactivos en Power BI y Excel</li>
+      <li>Limpieza y cruce de datos con Power Query</li>
+      <li>Automatización de tareas en Excel y Google Sheets</li>
+    </ul></div>
+    <div class="card"><h3>Apps a medida</h3><ul>
+      <li>Apps de gestión que tu equipo usa desde el teléfono</li>
+      <li>Módulos de producción, etiquetas, inventario, ventas y cobranzas</li>
+      <li>Construidas sobre Google Sheets y Apps Script, herramientas que tu negocio ya tiene</li>
+    </ul></div>
+    <div class="card"><h3>Marketing y marca</h3><ul>
+      <li>Estrategia y plan de contenido</li>
+      <li>Gestión de redes sociales</li>
+      <li>Identidad visual: logo, etiquetas, pendones y piezas para redes</li>
+      <li>Campañas en redes y medios tradicionales</li>
+      <li>Auditoría de Instagram</li>
+      <li>Análisis de resultados de cada campaña</li>
+    </ul></div>
+    <div class="card"><h3>Para negocios de comida</h3><ul>
+      <li>Estandarización de recetas y procesos de producción</li>
+      <li>Manual de manufactura y trazabilidad por lote</li>
+    </ul></div>
+    <div class="card"><h3>Formación</h3><ul>
+      <li>Talleres de Excel, Power Query, Power BI y Google Sheets</li>
+      <li>Talleres y mentorías de contenido para redes</li>
+    </ul></div>
+  </div>
+</div></section>
+
+<section id="caso" class="caso"><div class="w g">
+  <div class="intro">
+    <p class="kick">Caso: Alimentos Prisma</p>
+    <h2>Empezó con $20 en 2020. Hoy está en los principales supermercados de su región.</h2>
+    <p>Prisma es nuestra propia empresa y la mejor prueba de lo que hacemos juntos. Los $20 alcanzaron para las primeras bandejas de tequeños.</p>
+    <div class="shot"><img src="https://cdn.prod.website-files.com/6428993007c9bb0c2e9f60b5/6afa6ecf9e7bb2aaa2b9bc80_prisma-app-demo.webp" alt="App de Alimentos Prisma con datos ficticios" width="1280" height="800" loading="lazy"></div>
+    <a class="btn" href="https://prbconsulting.github.io/x3/" target="_blank" rel="noopener">Ver el sistema en acción</a>
+  </div>
+  <div class="pilares">
+    <div><h3>Marca</h3><p>Identidad de Prisma y Blinky, manual de manufactura y comunidad en Instagram.</p></div>
+    <div><h3>Producto</h3><p>Recetas estandarizadas con fórmula exacta por lote, para que cada bandeja salga igual.</p></div>
+    <div><h3>Sistemas</h3><p>Costeo por receta, trazabilidad por lote y reposición por cliente.</p></div>
+    <div><h3>App</h3><p>El equipo de planta lleva producción, inventario, ventas y cobranzas desde el teléfono.</p></div>
+  </div>
+</div></section>
+
+<section id="x3data" class="alt"><div class="w x3">
+  <div>
+    <p class="kick">X3 DATA</p>
+    <h2 style="font-size:clamp(28px,3.9vw,42px);margin-bottom:18px">Nuestra base de sistemas administrativos</h2>
+    <p>Captura de datos, costos, ventas, nómina y tableros, adaptados a cada cliente. Nació en Excel y hoy también funciona como app web. El control de pagos que hicimos para una empresa de salud en Ecuador sigue en uso hoy. Para negocios pequeños está X3 DATA Lite: compras, ventas e inventario, sin complicaciones.</p>
+    <p class="lema">Tus datos quedan contigo, sin mensualidad. Nosotros te acompañamos en la implementación y el soporte.</p>
+    <a class="btn p" href="https://prbconsulting.github.io/" target="_blank" rel="noopener">Ver las demos de X3 DATA</a>
+  </div>
+  <div class="shot"><img src="../portfolio/img/x3.webp" alt="Pantalla de inicio de X3 DATA con datos ficticios" width="1054" height="600" loading="lazy"></div>
+</div></section>
+
+<section id="contacto"><div class="w contacto">
+  <div class="sec-h" style="margin:0">
+    <p class="kick">Contacto</p>
+    <h2>Cuéntanos qué necesita tu negocio.</h2>
+    <p>Escríbenos y te respondemos para agendar una primera conversación. La forma más rápida de hablar con nosotros es por WhatsApp.</p>
+  </div>
+  <div class="vias">
+    <a class="wa" href="https://wa.me/584247807104" target="_blank" rel="noopener">Escribir por WhatsApp <span>+58 424 7807104</span></a>
+    <a href="mailto:prbconsultingve@gmail.com">Correo <span>prbconsultingve@gmail.com</span></a>
+    <a href="https://www.instagram.com/prbconsulting/" target="_blank" rel="noopener">Instagram <span>@prbconsulting</span></a>
+  </div>
+</div></section>
+</main>
+
+<footer><div class="w">
+  <div class="l"><img src="../assets/prb-logo.svg" alt="" width="32" height="24"><span>PRB Consulting · Trabajo remoto para todo el mundo</span></div>
+  <span>Daniel Pineda y Estefanía Romero</span>
+</div></footer>
+<script>
+/* ES/EN: el texto se escribe en español y se cambia con este diccionario; se recuerda la elección */
+(function(){var D={"Nosotros": "About", "Servicios": "Services", "Caso Prisma": "Prisma case", "Hablemos": "Let's talk", "Consultoría de datos y marca · Trabajo remoto para todo el mundo": "Data &amp; brand consulting · Remote, worldwide", "Datos que ordenan tu negocio. <em>Marcas que lo hacen crecer.</em>": "Data that brings order to your business. <em>Brands that make it grow.</em>", "Sistemas de control, apps de gestión y estrategia de contenido para pequeñas y medianas empresas. Trabajamos en remoto.": "Control systems, management apps and content strategy for small and mid-sized businesses. We work remotely.", "Hablemos de tu negocio": "Let's talk about your business", "Ver servicios": "See services", "líneas de servicio: datos, apps y marca": "service lines: data, apps and brand", "años creando contenido que vende": "years creating content that sells", "países donde hemos trabajado: Venezuela, Ecuador, Chile, Reino Unido y el Caribe": "countries we have worked in: Venezuela, Ecuador, Chile, the United Kingdom and the Caribbean", "año en que nació Alimentos Prisma, nuestro caso propio": "the year Alimentos Prisma was born, our own case", "Quiénes somos": "Who we are", "Un equipo de dos: uno ordena los datos, otra construye la marca.": "A team of two: one brings order to the data, the other builds the brand.", "Entramos a tu negocio, entendemos cómo funciona de verdad y armamos las herramientas que necesita para controlar costos, vender más y decidir con números.": "We step into your business, learn how it really works and build the tools it needs to control costs, sell more and decide with numbers.", "También enseñamos: talleres de Excel, Power BI y contenido para redes, para que tu equipo pueda seguir solo.": "We also teach: Excel, Power BI and social media content workshops, so your team can keep going on its own.", "Datos, sistemas y apps": "Data, systems and apps", "Analista de datos y administrador. Convierte datos desordenados en sistemas que el negocio usa todos los días: modelos de datos, cruces y conciliaciones, tableros y apps de gestión. Lleva más de 9 años dirigiendo negocios de alimentos, entre ellos Alimentos Prisma, que cofundó, así que conoce el problema desde adentro. Creó X3 DATA y ha hecho sistemas de control para panaderías, heladerías, casas de cambio y tiendas de agroinsumos. En su trabajo actual coordina la nómina mensual de varias empresas en distintos países del Caribe, unas 1.500 personas, da soporte a los clientes y participa en la implementación de proyectos. Licenciado en Administración (cum laude).": "Data analyst and business administrator. He turns messy data into systems a business uses every day: data models, cross-checks and reconciliations, dashboards and management apps. He has run food businesses for more than 9 years, including Alimentos Prisma, which he co-founded, so he knows the problem from the inside. He created X3 DATA and has built control systems for bakeries, ice cream shops, currency exchange houses and farm supply stores. In his current role he coordinates the monthly payroll of several companies across Caribbean countries, about 1,500 people, supports clients and takes part in system implementations. B.B.A., cum laude.", "Excel · Power Pivot y DAX · Power Query · Power BI · Google Sheets · Apps Script · SQL": "Excel · Power Pivot and DAX · Power Query · Power BI · Google Sheets · Apps Script · SQL", "Estrategia de marketing y contenido": "Marketing and content strategy", "Estratega de marketing y contenido. Convierte marcas pequeñas en marcas que la gente reconoce y compra: estrategia, plan de contenido, identidad visual y campañas. Lleva más de 8 años creando contenido que vende y es Content Manager en Facto Estudio Creativo desde 2018, donde ha liderado equipos de hasta 8 personas. Construyó desde cero las marcas Prisma y Blinky, del logo y las etiquetas a la comunidad en Instagram. Creó el Método H.O.C. y acompaña a emprendedores con mentorías, auditorías de Instagram y plantillas. Especialista en Gerencia de Marketing (CIDE-ULA, con honores).": "Marketing and content strategist. She turns small brands into brands people recognize and buy: strategy, content planning, visual identity and campaigns. She has more than 8 years creating content that sells and has been Content Manager at Facto Estudio Creativo since 2018, leading teams of up to 8 people. She built the Prisma and Blinky brands from scratch, from the logo and labels to the Instagram community. She created the H.O.C. Method and supports entrepreneurs with mentoring, Instagram audits and templates. Specialist in Marketing Management (CIDE-ULA, with honors).", "Estrategia de contenido · Redes sociales · Identidad visual · Campañas<br><a href=\"https://beacons.ai/soyestefaniaromero\" target=\"_blank\" rel=\"noopener\">Mentorías y plantillas de Estefanía</a>": "Content strategy · Social media · Visual identity · Campaigns<br><a href=\"https://beacons.ai/soyestefaniaromero\" target=\"_blank\" rel=\"noopener\">Estefanía’s mentoring and templates</a>", "Cómo te ayudamos": "How we help", "Datos y sistemas": "Data and systems", "Diagnóstico administrativo inicial": "Initial business diagnosis", "Sistemas de captura y gestión de datos: clientes, proveedores, inventario, ventas, pagos y nómina": "Data capture and management systems: customers, suppliers, inventory, sales, payments and payroll", "Costeo por receta o producto y control de costos": "Costing by recipe or product and cost control", "Tableros interactivos en Power BI y Excel": "Interactive dashboards in Power BI and Excel", "Limpieza y cruce de datos con Power Query": "Data cleaning and cross-checking with Power Query", "Automatización de tareas en Excel y Google Sheets": "Task automation in Excel and Google Sheets", "Apps a medida": "Custom apps", "Apps de gestión que tu equipo usa desde el teléfono": "Management apps your team uses from a phone", "Módulos de producción, etiquetas, inventario, ventas y cobranzas": "Modules for production, labels, inventory, sales and collections", "Construidas sobre Google Sheets y Apps Script, herramientas que tu negocio ya tiene": "Built on Google Sheets and Apps Script, tools your business already has", "Marketing y marca": "Marketing and brand", "Estrategia y plan de contenido": "Content strategy and plan", "Gestión de redes sociales": "Social media management", "Identidad visual: logo, etiquetas, pendones y piezas para redes": "Visual identity: logo, labels, banners and social media pieces", "Campañas en redes y medios tradicionales": "Social media and traditional media campaigns", "Auditoría de Instagram": "Instagram audit", "Análisis de resultados de cada campaña": "Results analysis for every campaign", "Para negocios de comida": "For food businesses", "Estandarización de recetas y procesos de producción": "Standardized recipes and production processes", "Manual de manufactura y trazabilidad por lote": "Manufacturing manual and lot traceability", "Formación": "Training", "Talleres de Excel, Power Query, Power BI y Google Sheets": "Excel, Power Query, Power BI and Google Sheets workshops", "Talleres y mentorías de contenido para redes": "Social media content workshops and mentoring", "Caso: Alimentos Prisma": "Case: Alimentos Prisma", "Empezó con $20 en 2020. Hoy está en los principales supermercados de su región.": "It started with $20 in 2020. Today it is in the main supermarkets of its region.", "Prisma es nuestra propia empresa y la mejor prueba de lo que hacemos juntos. Los $20 alcanzaron para las primeras bandejas de tequeños.": "Prisma is our own company and the best proof of what we do together. The $20 paid for the first trays of tequeños.", "Ver el sistema en acción": "See the system in action", "Marca": "Brand", "Identidad de Prisma y Blinky, manual de manufactura y comunidad en Instagram.": "Prisma and Blinky identity, manufacturing manual and Instagram community.", "Producto": "Product", "Recetas estandarizadas con fórmula exacta por lote, para que cada bandeja salga igual.": "Standardized recipes with an exact formula per batch, so every tray comes out the same.", "Sistemas": "Systems", "Costeo por receta, trazabilidad por lote y reposición por cliente.": "Recipe costing, lot traceability and restocking by customer.", "El equipo de planta lleva producción, inventario, ventas y cobranzas desde el teléfono.": "The plant team runs production, inventory, sales and collections from their phones.", "Nuestra base de sistemas administrativos": "Our foundation of business systems", "Captura de datos, costos, ventas, nómina y tableros, adaptados a cada cliente. Nació en Excel y hoy también funciona como app web. El control de pagos que hicimos para una empresa de salud en Ecuador sigue en uso hoy. Para negocios pequeños está X3 DATA Lite: compras, ventas e inventario, sin complicaciones.": "Data capture, costs, sales, payroll and dashboards, adapted to each client. It was born in Excel and today it also runs as a web app. The payment control system we built for a healthcare company in Ecuador is still in use. For small businesses there is X3 DATA Lite: purchases, sales and inventory, without the complexity.", "Tus datos quedan contigo, sin mensualidad. Nosotros te acompañamos en la implementación y el soporte.": "Your data stays with you, no monthly fee. We support you through implementation and beyond.", "Ver las demos de X3 DATA": "See the X3 DATA demos", "Contacto": "Contact", "Cuéntanos qué necesita tu negocio.": "Tell us what your business needs.", "Escríbenos y te respondemos para agendar una primera conversación. La forma más rápida de hablar con nosotros es por WhatsApp.": "Write to us and we will get back to you to set up a first conversation. WhatsApp is the fastest way to reach us.", "Escribir por WhatsApp <span>+58 424 7807104</span>": "Message us on WhatsApp <span>+58 424 7807104</span>", "Correo <span>prbconsultingve@gmail.com</span>": "Email <span>prbconsultingve@gmail.com</span>", "PRB Consulting · Trabajo remoto para todo el mundo": "PRB Consulting · Remote, worldwide", "Daniel Pineda y Estefanía Romero": "Daniel Pineda and Estefanía Romero"};
+var els=[].slice.call(document.querySelectorAll("body h1,body h2,body h3,body p,body li,body a,body b,body span"));var org=els.map(function(e){return e.innerHTML.trim();});var t0=document.title;
+function set(l){els.forEach(function(e,i){var es=org[i];var v=l==="en"&&D[es]?D[es]:es;if(e.innerHTML.trim()!==v)e.innerHTML=v;});document.documentElement.lang=l;document.title=l==="en"?"PRB Consulting \u00b7 Data that brings order to your business":t0;[].forEach.call(document.querySelectorAll(".lang button"),function(b){b.className=b.dataset.l===l?"on":"";});try{localStorage.setItem("prb-web-lang",l);}catch(x){}}
+var l="es";try{l=localStorage.getItem("prb-web-lang")||((navigator.language||"").toLowerCase().indexOf("es")===0?"es":"en");}catch(x){}
+[].forEach.call(document.querySelectorAll(".lang button"),function(b){b.onclick=function(){set(b.dataset.l);};});set(l);})();
+</script>
+</body>
+</html>
