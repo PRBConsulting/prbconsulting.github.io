@@ -1,0 +1,72 @@
+/* Torneos de pádel · estilos propios (la base es assets/prb.css) */
+.pasos{display:flex;gap:6px;margin:0 0 18px;flex-wrap:wrap}
+.pasos span{font-size:13px;font-weight:600;color:var(--mut);padding:4px 10px;border-radius:var(--r-s);background:var(--soft)}
+.pasos span.on{background:var(--oliva);color:var(--marfil)}
+.pasos span.ya{background:var(--oliva-suave);color:var(--oliva)}
+.elige{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-bottom:18px}
+.op{display:flex;flex-direction:column;gap:6px;text-align:left;background:var(--blanco);border:1.5px solid var(--line);border-radius:var(--r-l);padding:18px;cursor:pointer;font:inherit;color:inherit}
+.op:hover{border-color:var(--dorado)}
+.op.on{border-color:var(--oliva);box-shadow:inset 0 0 0 1px var(--oliva)}
+.op .ti{font-size:28px;color:var(--oliva)}
+.op b{font:600 22px/1.15 var(--disp)}
+.op span{color:var(--mut);font-size:14px}
+.op .rec{align-self:flex-start;font-size:12px;font-weight:600;padding:3px 9px;border-radius:var(--r-s);background:var(--dorado-suave);color:var(--tinta)}
+.step{display:flex;align-items:center;gap:12px}
+.step button{width:44px;height:44px;border-radius:var(--r);border:1px solid var(--line);background:var(--blanco);font-size:20px;cursor:pointer}
+.step b{min-width:36px;text-align:center;font-size:22px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{border:1px solid var(--line);background:var(--blanco);border-radius:var(--r-s);padding:7px 12px;font-size:14px;font-weight:600;cursor:pointer;color:var(--tinta);min-height:36px}
+.chips button.on{background:var(--oliva);border-color:var(--oliva);color:var(--marfil)}
+.cuenta{font-weight:600;color:var(--oliva)}
+
+/* partidos */
+.rondas{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:12px}
+.rondas button{flex:none;border:1px solid var(--line);background:var(--blanco);border-radius:var(--r-s);padding:7px 12px;font-weight:600;cursor:pointer;font-size:14px;color:var(--tinta)}
+.rondas button.on{background:var(--tinta);border-color:var(--tinta);color:var(--marfil)}
+.rondas button.ok{border-color:var(--oliva-suave);background:var(--oliva-suave);color:var(--oliva)}
+.rondas button.ok.on{background:var(--oliva);border-color:var(--oliva);color:var(--marfil)}
+.mts{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;margin-bottom:18px}
+.mt{background:var(--blanco);border:1px solid var(--line);border-radius:var(--r-l);padding:15px 18px}
+.mt.ok{border-color:var(--oliva-suave)}
+.mt .mh{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px;font-size:13px;font-weight:600;color:var(--dorado-texto)}
+.mt .ms{display:flex;align-items:center;gap:12px;padding:6px 0}
+.mt .ms+.ms{border-top:1px solid var(--line)}
+.mt .ln{flex:1;min-width:0;font-weight:600;line-height:1.3}
+.mt .ln.w{color:var(--oliva)}
+.mt .ln.w::after{content:"  ✓";color:var(--ok)}
+.mt input{width:64px;height:48px;text-align:center;font-size:22px;font-weight:600;border:1px solid var(--line);border-radius:var(--r);background:var(--marfil)}
+.mt input.st{width:48px;font-size:19px}
+.mt input:focus{outline:2px solid var(--dorado-texto);outline-offset:-1px;background:var(--blanco)}
+.mt .merr{margin:6px 0 0;color:var(--bad);font-size:13px;font-weight:600;min-height:0}
+.mt .merr:empty{display:none}
+.descansa{background:var(--soft);border-radius:var(--r);padding:9px 12px;font-size:14px;color:var(--mut);margin-bottom:12px}
+.crono{font:600 30px var(--font);font-variant-numeric:tabular-nums;color:var(--tinta)}
+.crono.fin{color:var(--bad)}
+.podio{display:grid;grid-template-columns:1fr 1.15fr 1fr;gap:12px;align-items:end;margin-bottom:18px}
+.podio div{background:var(--blanco);border:1px solid var(--line);border-radius:var(--r-l);padding:15px;text-align:center}
+.podio div.p1{background:var(--oliva);border-color:var(--oliva);color:var(--marfil);padding:24px 15px}
+.podio i{font-style:normal;font:600 30px var(--disp);display:block;color:var(--dorado-texto)}
+.podio .p1 i{color:var(--dorado-claro)}
+.podio b{display:block;font-size:15px;line-height:1.3}
+.podio small{color:var(--mut)}.podio .p1 small{color:var(--oliva-suave)}
+tr.pasa td:first-child{box-shadow:inset 3px 0 0 var(--dorado)}
+
+/* cuadro */
+.bk{display:flex;gap:18px;overflow-x:auto;padding-bottom:12px;align-items:stretch}
+.bk .col{flex:0 0 230px;display:flex;flex-direction:column;justify-content:space-around;gap:12px}
+.bk .col>b{font-size:13px;color:var(--dorado-texto);margin-bottom:-6px}
+.bm{background:var(--blanco);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;cursor:pointer;text-align:left;padding:0;font:inherit;color:inherit;width:100%}
+.bm:hover{border-color:var(--dorado)}
+.bm.bye{opacity:.55;cursor:default}
+.bm div{display:flex;justify-content:space-between;gap:9px;padding:7px 10px;font-size:14px}
+.bm div+div{border-top:1px solid var(--line)}
+.bm div.w{font-weight:600;color:var(--oliva)}
+.bm div span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bm div.tbd{color:#9C9480}
+.bm small{display:block;padding:3px 10px;background:var(--soft);font-size:12px;color:var(--mut)}
+.fmt{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.fmt .card b{font:600 24px var(--disp);display:flex;gap:9px;align-items:center}
+.fmt .card b .ti{color:var(--oliva);font-size:22px}
+.fmt p{margin:6px 0 9px;color:var(--mut);font-size:15px}
+@media(max-width:640px){.mts{grid-template-columns:1fr}.podio{grid-template-columns:1fr}.podio div.p1{order:-1}}
+@media print{.mt input{border:0;background:none}.rondas,.btn,.lnk{display:none!important}}
