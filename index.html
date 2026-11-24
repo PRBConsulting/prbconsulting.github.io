@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Apps · PRB Consulting</title>
+<meta name="description" content="Apps de PRB Consulting para negocios pequeños y finanzas: pruébalas gratis con datos ficticios, sin registrarte.">
+<link rel="icon" href="assets/prb-sello.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Inter:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<link rel="stylesheet" href="assets/prb.css?v=9">
+<style>
+.hero{background:var(--oliva);color:var(--marfil);padding:60px 18px 72px}
+.hero .w{max-width:928px;margin:0 auto}.list{max-width:960px;margin:0 auto}
+.hero img{height:42px;margin-bottom:24px}
+.hero h1{font-size:clamp(34px,5.4vw,54px);line-height:1.05;margin:0 0 12px;color:var(--marfil);text-wrap:balance}
+.hero p{color:var(--oliva-suave);max-width:640px;margin:0;font-size:17px}
+.hero p.elige{margin-top:18px;font-size:15px;color:var(--marfil)}.hero p.elige b{color:var(--dorado-claro);font-weight:600}
+.hero .gold{color:var(--dorado-claro)}
+.list{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,400px),1fr));gap:18px;padding:0 18px;margin-top:-36px}
+.app-c{display:flex;flex-direction:column;gap:6px;background:var(--blanco);border:1px solid var(--line);border-radius:var(--r-l);padding:24px;text-decoration:none;color:inherit}
+.app-c .ic{width:44px;height:44px;border-radius:var(--r);background:var(--oliva-suave);color:var(--oliva);display:grid;place-items:center;font-size:24px;margin-bottom:6px}
+a.app-c:hover,a.app-c:focus-visible{border-color:var(--dorado);outline:none}
+.app-c em{font-style:normal;font-size:14px;font-weight:600;color:var(--dorado-texto)}
+.app-c b{font:600 28px/1.1 var(--disp)}
+.app-c span{color:var(--mut)}
+.app-c .go{margin-top:auto;padding-top:12px;font-weight:600;color:var(--oliva)}
+.app-c.soon{background:var(--soft)}.app-c.soon b,.app-c.soon span{color:var(--mut)}
+.note{max-width:960px;margin:28px auto 40px;padding:0 16px;color:var(--mut);font-size:13px}
+.note a{color:var(--oliva);font-weight:600}
+.planes{max-width:960px;margin:36px auto 0;padding:0 16px}
+.planes h2{font:600 32px var(--disp);margin:0 0 6px}.planes>p{color:var(--mut);margin:0 0 16px}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
+.plan{background:var(--blanco);border:1px solid var(--line);border-radius:var(--r-l);padding:24px;display:flex;flex-direction:column;gap:6px}
+.plan.dest{border:2px solid var(--dorado)}
+.plan em{font-style:normal;font-size:14px;font-weight:600;color:var(--dorado-texto)}
+.plan b{font:600 26px var(--disp)}.plan .pr{font-weight:600;color:var(--oliva)}
+.plan ul{margin:6px 0 0;padding-left:18px;color:var(--mut);font-size:14px}.plan li{margin:3px 0}
+.planes .cta{margin-top:18px;background:var(--oliva);color:var(--marfil);border-radius:var(--r-l);padding:18px 20px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.planes .cta a{background:var(--dorado-suave);color:var(--tinta);font-weight:600;text-decoration:none;padding:12px 18px;border-radius:var(--r)}
+</style>
+<script src="assets/i18n.js?v=7"></script>
+</head>
+<body>
+<header class="hero"><div class="w">
+  <img src="assets/prb-logo-dorado.svg" alt="PRB Consulting">
+  <h1>Sistemas simples para <span class="gold">ordenar tu negocio</span></h1>
+  <p>Pruébalos aquí mismo con datos ficticios. No hace falta registrarte: lo que cargues se queda guardado solo en tu navegador.</p>
+  <p class="elige" style="margin-top:12px;color:var(--oliva-suave);font-size:14px">Importante: tus datos quedan guardados solo en el navegador del equipo donde los cargas. Si después abres la app en el teléfono o en otra computadora, no los verás; para pasarlos, descarga el respaldo en Configuración y cárgalo en el otro equipo.</p>
+  <p class="elige">¿No sabes cuál elegir? Si vendes en mostrador, <b>X3 DATA Lite</b>. Si facturas, produces o despachas, <b>X3 DATA</b>. Si solo necesitas pagar sueldos, <b>Nómina</b>. Si alquilas inmuebles, <b>Alquileres</b>.</p>
+</div></header>
+<main style="padding:0">
+<div class="list">
+  <a class="app-c" target="_blank" rel="noopener" href="x3-lite/"><div class="ic"><i class="ti ti-building-store" aria-hidden="true"></i></div><em>Para bodegas y emprendimientos</em><b>X3 DATA Lite</b><span>Sabes qué tienes, cuánto vendiste y cuánto ganaste, en $ y Bs. Vendes en segundos y cierras la caja sin calculadora.</span><span class="go">Abrir la app →</span></a>
+  <a class="app-c" target="_blank" rel="noopener" href="x3/"><div class="ic"><i class="ti ti-building-factory-2" aria-hidden="true"></i></div><em>Para empresas que facturan, producen o distribuyen</em><b>X3 DATA</b><span>Todo tu negocio en un solo lugar: facturas con IVA, lo que te deben y lo que debes, inventario, costos y si este mes ya ganaste. Producción, despachos y nómina se encienden cuando los necesites.</span><span class="go">Abrir la app →</span></a>
+  <a class="app-c" target="_blank" rel="noopener" href="nomina/"><div class="ic"><i class="ti ti-users" aria-hidden="true"></i></div><em>Para quien tiene trabajadores</em><b>Nómina LOTTT</b><span>Calcula la quincena, las vacaciones, las utilidades y las liquidaciones según la LOTTT, sin pelearte con Excel. Cada monto dice de qué artículo de la ley sale.</span><span class="go">Abrir la app →</span></a>
+  <a class="app-c" target="_blank" rel="noopener" href="finanzas/"><div class="ic"><i class="ti ti-wallet" aria-hidden="true"></i></div><em>Para ti y tu familia</em><b>Finanzas personales</b><span>Anota lo que gastas, mira a dónde se va tu dinero y cuánto guardar cada mes para llegar a tu meta.</span><span class="go">Abrir la app →</span></a>
+  <a class="app-c" target="_blank" rel="noopener" href="alquileres/"><div class="ic"><i class="ti ti-building-community" aria-hidden="true"></i></div><em>Para quien alquila locales, galpones o terrenos</em><b>Alquileres</b><span>Mira tu terreno en un plano: quién tiene cada local, quién debe y qué está libre. Cobras, sacas el recibo y sabes cuánto te deja cada propiedad.</span><span class="go">Abrir la app →</span></a>
+  <a class="app-c" target="_blank" rel="noopener" href="padel/"><div class="ic"><i class="ti ti-ball-tennis" aria-hidden="true"></i></div><em>Para clubes y grupos de amigos</em><b>Torneos de pádel</b><span>Americano, mexicano, rey de la pista, grupos y cuadro. Respondes 3 preguntas y la app arma las rondas, cuenta los puntos y ordena la tabla.</span><span class="go">Abrir la app →</span></a>
+</div>
+<section class="planes" id="planes">
+  <h2>Planes de pago (próximamente)</h2>
+  <p>Las demos son gratis y lo seguirán siendo. Si quieres usar el sistema en serio en tu negocio, vamos a tener planes con tus datos en la nube y acompañamiento.</p>
+  <div class="pgrid">
+    <div class="plan"><em>Gratis</em><b>Demo</b><span class="pr">$0</span><ul><li>Todas las apps con datos de ejemplo</li><li>Tus datos se guardan solo en tu navegador</li><li>Respaldo en archivo para no perderlos</li><li>Un solo equipo</li></ul></div>
+    <div class="plan"><em>Mensual</em><b>Básico</b><span class="pr">Próximamente</span><ul><li>Compra, venta, inventario y facturación</li><li>Datos en la nube con tu usuario y clave</li><li>Úsalo en la PC y en el teléfono</li><li>Respaldo automático todos los días</li><li>Soporte por WhatsApp</li></ul></div>
+    <div class="plan dest"><em>Mensual</em><b>Pro</b><span class="pr">Próximamente</span><ul><li>Todo lo del Básico</li><li>Producción por lotes y distribución</li><li>Facturación digital o impresora fiscal (en evaluación)</li><li>Nómina según la LOTTT, con parámetros actualizados</li><li>Varios usuarios con permisos (dueño, encargado, cajero)</li></ul></div>
+    <div class="plan"><em>Pago único</em><b>Implementación</b><span class="pr">Según tu negocio</span><ul><li>Cargamos tus productos, clientes y trabajadores</li><li>Conectamos tu facturación fiscal</li><li>Capacitación para ti y tu equipo</li><li>Ajustes a la medida de tu negocio</li></ul></div>
+  </div>
+  <div class="cta"><span>¿Te interesa usarlo en tu negocio? Escríbenos y te avisamos primero cuando abran los planes.</span><a href="https://www.instagram.com/prbconsulting/" target="_blank" rel="noopener">Escríbenos por Instagram</a></div>
+</section>
+<p class="note">Hecho por PRB Consulting · <a href="https://prbconsulting.github.io/prb/" target="_blank" rel="noopener">Sitio web</a> · <a href="https://www.instagram.com/prbconsulting/" target="_blank" rel="noopener">Instagram</a>. Todos los datos de las demos son ficticios.</p>
+</main>
+</body>
+</html>
