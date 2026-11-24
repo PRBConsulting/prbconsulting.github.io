@@ -1,0 +1,41 @@
+/* Alquileres · estilos propios (la base es assets/prb.css) */
+.plano-w{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:12px;align-items:start}
+.plano{background:var(--blanco);border:1px solid var(--line);border-radius:var(--r-l);padding:12px;position:relative}
+.plano svg{display:block;width:100%;height:auto;max-height:68vh;touch-action:none;user-select:none;-webkit-user-select:none}
+.plano svg .u{cursor:pointer}
+.plano svg .u rect.b{stroke-width:.35;transition:fill .15s}
+.plano svg .u:hover rect.b{stroke:var(--dorado);stroke-width:.6}
+.plano svg .u.sel rect.b{stroke:var(--tinta);stroke-width:.8}
+.plano svg.edit .u{cursor:move}
+.plano svg .hd{fill:var(--tinta);cursor:nwse-resize}
+.plano svg text{pointer-events:none;font-family:Inter,sans-serif}
+.plano .tool{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:9px}
+.ley{display:flex;gap:12px;flex-wrap:wrap;font-size:13px;color:var(--mut);margin-top:9px}
+.ley span{display:inline-flex;align-items:center;gap:6px}
+.ley i{width:14px;height:14px;border-radius:4px;display:inline-block;border:1px solid rgba(30,38,24,.25)}
+.ficha{position:sticky;top:12px}
+.ficha .tit{font:600 26px/1.1 var(--disp);margin:0 0 3px}
+.ficha dl{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;margin:12px 0;font-size:15px}
+.ficha dt{color:var(--mut)}.ficha dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
+.props{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.props button{border:1px solid var(--line);background:var(--blanco);border-radius:var(--r-s);padding:7px 12px;font-weight:600;cursor:pointer;font-size:14px;color:var(--tinta)}
+.props button.on{background:var(--tinta);border-color:var(--tinta);color:var(--marfil)}
+.mini{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-bottom:12px}
+.mini div{background:var(--blanco);border:1px solid var(--line);border-radius:var(--r);padding:9px 12px}
+.mini b{display:block;font-size:19px;font-variant-numeric:tabular-nums}.mini span{font-size:13px;color:var(--mut)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:var(--r-s);overflow:hidden}
+.seg button{border:0;background:var(--blanco);padding:7px 12px;font-weight:600;font-size:14px;cursor:pointer;color:var(--mut)}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button.on{background:var(--oliva);color:var(--marfil)}
+.recibo{font-size:15px}.recibo h2{font:600 28px var(--disp);margin:0}
+.recibo table td{white-space:normal}
+.recibo .tot{font-size:22px;font-weight:600}
+@media(max-width:1100px){.plano-w{grid-template-columns:minmax(0,1fr)}.ficha{position:static}}
+@media(max-width:640px){.mini{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media print{
+  body.print-recibo .prb-bar,body.print-recibo .app,body.print-recibo .prb-fb-btn,body.print-recibo #tr-go{display:none!important}
+  body.print-recibo dialog{position:static;box-shadow:none;max-width:none;display:block}
+  body.print-recibo dialog .hd,body.print-recibo dialog .ft{display:none}
+  body.print-recibo dialog .bd{max-height:none;overflow:visible}
+  body.print-recibo dialog::backdrop{display:none}
+}
